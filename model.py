@@ -42,7 +42,7 @@ class TimeAttnModel:
 
             initial_state = cell.zero_state(self.config["batch_size"], tf.float32)
             state = initial_state
-            c, h = state
+            s, h = state
             outputs = []
 
             v_e = tf.get_variable("v_e", [self.config["batch_size"], 1,
@@ -60,8 +60,9 @@ class TimeAttnModel:
 
             for t in range(self.config["T"]):
                 # if t > 0: tf.get_variable_scope().reuse_variables()
-
-                attn_input = tf.expand_dims(tf.tile(tf.concat([c, h], axis=1), [1, self.config["n"]]), -1)
+                attn_input = tf.concat([h, s], axis=1)
+                attn_input = tf.reshape(tf.tile(attn_input, [1, self.config["n"]]),
+                                        [self.config["batch_size"], self.config["n"], 2*self.config["m"], 1])
                 driving_series = tf.expand_dims(driving_series, -1)
 
                 # @ is matrix multiplication
@@ -74,7 +75,7 @@ class TimeAttnModel:
                 x_tilde = alpha * driving_series[:, :, t]  # input weighted with attention weights
 
                 (cell_output, state) = cell(x_tilde, state)
-                c, h = state
+                s, h = state
                 outputs.append(h)
 
         encoder_outputs = tf.concat(outputs, axis=1)
@@ -86,7 +87,7 @@ class TimeAttnModel:
 
             initial_state = cell.zero_state(self.config["batch_size"], tf.float32)
             state = initial_state
-            c, h = state
+            s, h = state
             outputs = []
 
             for t in range(self.config["T"]):
