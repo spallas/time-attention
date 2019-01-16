@@ -10,6 +10,7 @@ class Config(object):
     """
     Attributes
     ----------
+    # TODO(xhebraj) n shouldn't be in the config. It should be inferred
     n:
         Number of driving series
 
