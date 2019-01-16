@@ -24,8 +24,12 @@ with tf.variable_scope("EncoderRNN"):
     v_e = tf.get_variable("v_e", [config["batch_size"], 1,
                                   config["T"]])
 
+    b_ve = tf.get_variable("b_ve", [config["batch_size"], 1])
+
     W_e = tf.get_variable("W_e", [config["batch_size"], 1,
                                   config["T"], 2 * config["m"]])
+
+    b_we = tf.get_variable("b_we", [config["batch_size"], 1, config["T"]])
 
     U_e = tf.get_variable("U_e", [config["batch_size"], 1,
                                   config["T"], config["T"]])
@@ -33,6 +37,8 @@ with tf.variable_scope("EncoderRNN"):
     v_e = tf.tile(v_e, [1, config["n"], 1])
     U_e = tf.tile(U_e, [1, config["n"], 1, 1])
     W_e = tf.tile(W_e, [1, config["n"], 1, 1])
+    b_we = tf.tile(b_we, [1, config["n"], 1])
+    b_ve = tf.tile(b_ve, [1, config["n"]])
 
     for t in range(config["T"]):
         # if t > 0: tf.get_variable_scope().reuse_variables()
@@ -42,22 +48,21 @@ with tf.variable_scope("EncoderRNN"):
         attn_input = tf.reshape(tf.tile(attn_input, [1, config["n"]]), [config["batch_size"], config["n"], 2*config["m"], 1])
         print("attn_input\t", attn_input.shape)
 
-        x = tf.matmul(W_e, attn_input)  # tf.layers.dense(attn_input, config["T"])
-        x = tf.squeeze(x)
+        x = tf.squeeze(tf.matmul(W_e, attn_input)) + b_we
+
         print("x\t", x.shape)
         driving_series = tf.expand_dims(driving_series, -1)
         print("U_e\t", U_e.shape)
         print(driving_series.shape)
 
-        y = tf.matmul(U_e, driving_series)
-        y = tf.squeeze(y)
+        y = tf.squeeze(tf.matmul(U_e, driving_series))
         print("y\t", y.shape)
 
         z = tf.tanh(x + y)
         print("z\t", z.shape)
 
         print("v_e\t", v_e.shape)
-        e_t = tf.reduce_sum(v_e * z, axis=-1)
+        e_t = tf.reduce_sum(v_e * z, axis=-1) + b_ve
 
         print("e_t\t", e_t.shape)
 
@@ -100,6 +105,8 @@ with tf.variable_scope("DecoderRNN"):
     v_d = tf.get_variable("v_e", [config["batch_size"], 1,
                                   config["m"]])
 
+    b_vd = tf.get_variable("b_vd", [config["batch_size"], 1])
+
     w_tilde = tf.get_variable("w_tilde", [config["batch_size"],
                                           config["m"] + 1])
 
@@ -107,6 +114,8 @@ with tf.variable_scope("DecoderRNN"):
 
     W_d = tf.get_variable("W_e", [config["batch_size"], 1,
                                   config["m"], 2 * config["p"]])
+
+    b_wd = tf.get_variable("b_vd", [config["batch_size"], 1, config["m"]])
 
     U_d = tf.get_variable("U_e", [config["batch_size"], 1,
                                   config["m"], config["m"]])
@@ -119,6 +128,8 @@ with tf.variable_scope("DecoderRNN"):
     v_d = tf.tile(v_d, [1, config["T"], 1])
     U_d = tf.tile(U_d, [1, config["T"], 1, 1])
     W_d = tf.tile(W_d, [1, config["T"], 1, 1])
+    b_vd = tf.tile(b_vd, [1, config["T"]])
+    b_wd = tf.tile(b_wd, [1, config["T"], 1])
 
     for t in range(config["T"]):
         # if t > 0: tf.get_variable_scope().reuse_variables()
@@ -130,7 +141,7 @@ with tf.variable_scope("DecoderRNN"):
         print("encoder_outputs", encoder_outputs.shape)
         print("attn_input", attn_input.shape)
 
-        x = tf.squeeze(W_d @ attn_input)
+        x = tf.squeeze(W_d @ attn_input) + b_wd
         print("x", x.shape)
 
         y = tf.squeeze(U_d @ encoder_outputs)
@@ -141,7 +152,7 @@ with tf.variable_scope("DecoderRNN"):
 
         print("z", z.shape)
 
-        l_t = tf.reduce_sum(v_d * z, axis=-1)
+        l_t = tf.reduce_sum(v_d * z, axis=-1) + b_vd
         beta = tf.nn.softmax(l_t)  # attention weights
 
         encoder_outputs = tf.squeeze(encoder_outputs)
@@ -167,4 +178,6 @@ with tf.variable_scope("DecoderRNN"):
 
     y_T = tf.reduce_sum(v_y * (tf.squeeze(W_y @ d_c) + b_w)) + b_v
 
-    print(y_T)
+    print(y_T.shape)
+
+

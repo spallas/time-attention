@@ -1,0 +1,13 @@
+{
+  "m": 6,
+  "p": 7,
+  "T": 10,
+  "n": 4,
+  "batch_size": 5,
+  "num_epochs": 500,
+  "learning_rate": 0.001,
+  "decay_rate": 0.99,
+  "decay_frequency": 100,
+  "input_path": "data/nasdaq100",
+  "log_dir": "logs"
+}
