@@ -57,6 +57,12 @@ class Config(object):
 
     decay_frequency:
 
+    max_gradient_norm:
+        Used in gradient clipping
+
+    optimizer:
+        Optimizer name
+
     batch_size:
         Number of windows to be processed at the same time
 
@@ -79,6 +85,8 @@ class Config(object):
     T: int = 10
     learning_rate: float = 0.01
     decay_frequency: int = 100
+    max_gradient_norm: float = 5
+    optimizer: str = "adam"
     batch_size: int = 4
     num_epochs: int = 10
     log_dir: str = "log/"
