@@ -47,7 +47,10 @@ if __name__ == '__main__':
     with tf.Session() as session:
         session.run(tf.global_variables_initializer())
         iterator = train_set.make_initializable_iterator()
+        val_iterator = val_set.make_initializable_iterator()
         next_element = iterator.get_next()
+        val_next_element = val_iterator.get_next()
+        session.run(val_iterator.initializer)
         for _ in range(config.num_epochs):
             session.run(iterator.initializer)
             while True:
@@ -68,7 +71,8 @@ if __name__ == '__main__':
 
                     if tf_global_step % eval_frequency == 0:
                         saver.save(session, os.path.join(log_dir, "model"), global_step=tf_global_step)
-                        eval_summary, eval_RMSE, eval_MAE, eval_MAPE = model.evaluate(session)
+                        eval_summary, eval_RMSE, eval_MAE, eval_MAPE = model.evaluate(session, val_next_element)
+                        session.run(val_iterator.initializer)
 
                         if eval_RMSE < best_RMSE:
                             best_RMSE = eval_RMSE
