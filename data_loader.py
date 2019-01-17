@@ -4,11 +4,9 @@ import numpy as np
 
 from config import Config
 
-tf.enable_eager_execution()
-
 
 # TODO(xhebraj) implement return of train/test/validation
-def get_train_test_dataset(config: Config, cat_before_window=False):
+def get_train_test_dataset(config: Config, cat_before_window: bool = False) -> tf.data.Dataset:
     """
     Returns X and y of the data passed as config.
 
@@ -95,8 +93,6 @@ def get_train_test_dataset(config: Config, cat_before_window=False):
             y_Ts.append(np.squeeze(y_T))
         X_T = np.vstack(X_Ts)
         y_T = np.vstack(y_Ts)
-
-    y_T = np.expand_dims(y_T, axis=-1)
 
     X_dataset = tf.data.Dataset.from_tensor_slices(X_T)
     y_dataset = tf.data.Dataset.from_tensor_slices(y_T)

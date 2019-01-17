@@ -13,10 +13,9 @@ class TimeAttnModel:
 
         self.driving_series = tf.placeholder(tf.float32, [None,  # batch size
                                                           None,  # n (number of supporting series)
-                                                          None])  # T (length of a time window)
+                                                          self.config.T])  # T (length of a time window)
         self.past_history = tf.placeholder(tf.float32, [None,  # batch size
-                                                        None,  # T
-                                                        1])  # y_i
+                                                        self.config.T])  # T
 
         self.predictions, self.loss = self.get_predictions_and_loss(self.driving_series,
                                                                     self.past_history)
@@ -110,3 +109,21 @@ class TimeAttnModel:
         print("Restoring from {}".format(checkpoint_path))
         session.run(tf.global_variables_initializer())
         saver.restore(session, checkpoint_path)
+
+    def evaluate(self, session):
+        # TODO(beabevi): implement
+        RMSE = 0.0
+        MAE = 0.0
+        MAPE = 0.0
+
+        # :)
+
+        summary_dict = {}
+        summary_dict["RMSE"] = 0.0
+        print("RMSE: {:.2f}%".format(0.0 * 100))
+        summary_dict["MAE"] = 0.0
+        print("MAE: {:.2f}%".format(0.0 * 100))
+        summary_dict["MAPE"] = 0.0
+        print("MAPE: {:.2f}%".format(0.0 * 100))
+        summary = tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in summary_dict.items()])
+        return summary, RMSE, MAE, MAPE

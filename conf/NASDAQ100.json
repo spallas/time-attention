@@ -1,9 +1,6 @@
 {
-    "m": 6,
-    "p": 7,
-    "T": 10,
-    "n": 4,
-    "batch_size": 5,
+    "n": 81,
+    "batch_size": 128,
     "num_epochs": 500,
     "learning_rate": 0.001,
     "decay_rate": 0.99,

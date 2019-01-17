@@ -80,14 +80,14 @@ class Config(object):
     target_cols: List[str]
     drop_cols: Optional[List[str]] = field(default_factory=list)
     m: int = 64  # TODO(xhebraj) set optimal values of static attributes
-    p: int = 16
+    p: int = 64
     sep: str = ","
     T: int = 10
-    learning_rate: float = 0.01
-    decay_frequency: int = 100
+    learning_rate: float = 0.001
+    decay_frequency: int = 1000
     max_gradient_norm: float = 5
     optimizer: str = "adam"
-    batch_size: int = 4
+    batch_size: int = 128
     num_epochs: int = 10
     log_dir: str = "log/"
 
