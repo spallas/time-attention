@@ -27,6 +27,25 @@ def get_train_test_dataset(config: Config, cat_before_window=False):
             y : (config.batch_size, config.T, 1)
     Usage
     -----
+
+    Graph Mode:
+    ```
+    dataset = get_train_test_dataset(config)
+    dataset = dataset.batch(batch_size) # .shuffle() if necessary
+    iterator = dataset.make_initializable_iterator()
+    next_element = iterator.get_next()
+    for _ in range(epochs):
+        sess.run(iterator.initializer)
+        while True:
+            try:
+                sess.run(next_element)
+            except tf.errors.OutOfRangeError:
+                break
+        
+        # [Perform end-of-epoch calculations here.]
+    ```
+
+    Eager Mode:
     ```
         dataset = get_train_test_dataset(config)
         it = dataset.batch(batch_size)
