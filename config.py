@@ -72,6 +72,10 @@ class Config(object):
     log_dir:
         Directory for logging
 
+    train_ratio:
+        Portion of the data to be used as training set. The remainder of
+        the portion is equally split into test and validation.
+
     """
 
     decay_rate: float
@@ -92,6 +96,7 @@ class Config(object):
     batch_size: int = 128
     num_epochs: int = 10
     log_dir: str = "log/"
+    train_ratio: float = 0.8
 
 
 # Test

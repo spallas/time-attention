@@ -6,7 +6,7 @@ import tensorflow as tf
 from config import Config
 
 import model
-from data_loader import get_train_test_dataset
+from data_loader import get_datasets
 
 
 def copy_checkpoint(source, target):
@@ -24,8 +24,10 @@ if __name__ == '__main__':
     with open("conf/NASDAQ100.json") as f:
         config = Config.from_json(f.read())
 
-    dataset = get_train_test_dataset(config).batch(config.batch_size, drop_remainder=True)
-
+    train_set, val_set, test_set = get_datasets(config)
+    train_set = train_set.batch(config.batch_size, drop_remainder=True)
+    val_set = val_set.batch(config.batch_size, drop_remainder=True)
+    test_set = test_set.batch(config.batch_size, drop_remainder=True)
     model = model.TimeAttnModel(config)
 
     report_frequency = 10  # config["report_frequency"]
@@ -44,7 +46,7 @@ if __name__ == '__main__':
 
     with tf.Session() as session:
         session.run(tf.global_variables_initializer())
-        iterator = dataset.make_initializable_iterator()
+        iterator = train_set.make_initializable_iterator()
         next_element = iterator.get_next()
         for _ in range(config.num_epochs):
             session.run(iterator.initializer)
