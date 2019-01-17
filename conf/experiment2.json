@@ -1,0 +1,28 @@
+{
+    "m": 6,
+    "p": 7,
+    "T": 10,
+    "n": 4,
+    "batch_size": 5,
+    "num_epochs": 500,
+    "learning_rate": 0.001,
+    "decay_rate": 0.99,
+    "decay_frequency": 100,
+    "log_dir": "log",
+    "data_paths": [
+        "data/NEW-DATA-1.T15.csv",
+        "data/NEW-DATA-2.T15.csv"
+    ],
+    "target_cols": [
+        "4:Temperature_Habitacion_Sensor"
+    ],
+    "drop_cols": [
+        "1:Date",
+        "2:Time",
+        "19:Exterior_Entalpic_1",
+        "20:Exterior_Entalpic_2",
+        "21:Exterior_Entalpic_turbo",
+        "24:Day_Of_Week"
+    ],
+    "sep": " "
+}
