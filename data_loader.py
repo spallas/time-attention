@@ -99,25 +99,18 @@ def get_datasets(
             y_Ts.append(np.squeeze(y_T))
         X_T = np.vstack(X_Ts)
         y_T = np.vstack(y_Ts)
-    train_end = int(len(X_T) * config.train_ratio)
-    val_end = train_end + int(((1 - config.train_ratio) / 2) * len(X_T))
-    train_X = X_T[:train_end]
-    train_y = y_T[:train_end]
-    val_X   = X_T[train_end:val_end]
-    val_Y   = y_T[train_end:val_end]
-    test_X  = X_T[val_end:]
-    test_y  = y_T[val_end:]
+    train_size = int(len(X_T) * config.train_ratio)
+    val_size = int(((1 - config.train_ratio) / 2) * len(X_T))
+    test_size = val_size
 
-    train_X_dataset = tf.data.Dataset.from_tensor_slices(train_X)
-    train_y_dataset = tf.data.Dataset.from_tensor_slices(train_y)
-    val_X_dataset = tf.data.Dataset.from_tensor_slices(val_X)
-    val_y_dataset = tf.data.Dataset.from_tensor_slices(val_Y)
-    test_X_dataset = tf.data.Dataset.from_tensor_slices(test_X)
-    test_y_dataset = tf.data.Dataset.from_tensor_slices(test_y)
+    dataset = tf.data.Dataset.zip((
+        tf.data.Dataset.from_tensor_slices(X_T),
+        tf.data.Dataset.from_tensor_slices(y_T),
+    ))
 
-    train_dataset = tf.data.Dataset.zip((train_X_dataset, train_y_dataset))
-    val_dataset = tf.data.Dataset.zip((val_X_dataset, val_y_dataset))
-    test_dataset = tf.data.Dataset.zip((test_X_dataset, test_y_dataset))
+    train_dataset = dataset.take(train_size)
+    val_dataset = dataset.skip(train_size).take(val_size)
+    test_dataset = dataset.skip(train_size + val_size).take(test_size)
     return train_dataset, val_dataset, test_dataset
 
 
