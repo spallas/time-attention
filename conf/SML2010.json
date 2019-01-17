@@ -1,8 +1,4 @@
 {
-    "m": 6,
-    "p": 7,
-    "T": 10,
-    "n": 4,
     "batch_size": 5,
     "num_epochs": 500,
     "learning_rate": 0.001,

@@ -6,7 +6,9 @@ from config import Config
 
 
 # TODO(xhebraj) implement return of train/test/validation
-def get_train_test_dataset(config: Config, cat_before_window: bool = False) -> tf.data.Dataset:
+def get_train_test_dataset(
+    config: Config, cat_before_window: bool = False
+) -> tf.data.Dataset:
     """
     Returns X and y of the data passed as config.
 
@@ -39,7 +41,7 @@ def get_train_test_dataset(config: Config, cat_before_window: bool = False) -> t
                 sess.run(next_element)
             except tf.errors.OutOfRangeError:
                 break
-        
+
         # [Perform end-of-epoch calculations here.]
     ```
 
@@ -72,6 +74,7 @@ def get_train_test_dataset(config: Config, cat_before_window: bool = False) -> t
 
     driving_series = [col for col in usecols if col not in config.target_cols]
 
+    config.n = len(driving_series)
     dfs = []
     for path in config.data_paths:
         dfs.append(pd.read_csv(path, sep=config.sep, usecols=usecols))

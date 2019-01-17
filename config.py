@@ -10,9 +10,6 @@ class Config(object):
     """
     Attributes
     ----------
-    # TODO(xhebraj) n shouldn't be in the config. It should be inferred
-    n:
-        Number of driving series
 
     decay_rate:
         Decay rate of the momentum
@@ -37,6 +34,9 @@ class Config(object):
         The name of the columns to be dropped from the csv.
         In the case of SML2010 some columns are 0, such as the ones regarding
         Exterior_Entalpic_*
+
+    n:
+        Number of driving series
 
     m:
         The size of the hidden state of the encoder
@@ -74,12 +74,14 @@ class Config(object):
 
     """
 
-    n: Optional[int]  # Set at runtime
     decay_rate: float
     data_paths: List[str]
     target_cols: List[str]
     drop_cols: Optional[List[str]] = field(default_factory=list)
-    m: int = 64  # TODO(xhebraj) set optimal values of static attributes
+    n: Optional[
+        int
+    ] = 0  # Set at runtime by `data_loader.get_train_test_dataset`
+    m: int = 64
     p: int = 64
     sep: str = ","
     T: int = 10

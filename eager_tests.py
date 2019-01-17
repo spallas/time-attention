@@ -13,7 +13,6 @@ driving_series = tf.ones([config["batch_size"], config["n"], config["T"]])
 past_history = tf.ones([config["batch_size"], config["T"]])
 
 with tf.variable_scope("EncoderRNN"):
-    # TODO: add bias to Ws, check order of hidden states and cell states
     cell = LSTMCell(config["m"], state_is_tuple=True)
 
     initial_state = cell.zero_state(config["batch_size"], tf.float32)
@@ -70,7 +69,6 @@ print(encoder_outputs)
 
 # define decoder
 with tf.variable_scope("DecoderRNN"):
-    # TODO: add bias to Ws, check order of hidden states and cell states
     cell = LSTMCell(config["p"], state_is_tuple=True)
 
     initial_state = cell.zero_state(config["batch_size"], tf.float32)
