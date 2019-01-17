@@ -88,7 +88,7 @@ def get_train_test_dataset(config: Config, cat_before_window=False):
 
 # Test
 if __name__ == "__main__":
-    with open("conf/experiment2.json") as f:
+    with open("conf/NASDAQ100.json") as f:
         config = Config.from_json(f.read())
 
     dataset = get_train_test_dataset(config)

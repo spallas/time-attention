@@ -10,8 +10,8 @@
     "decay_frequency": 100,
     "log_dir": "log",
     "data_paths": [
-        "data/NEW-DATA-1.T15.csv",
-        "data/NEW-DATA-2.T15.csv"
+        "data/SML2010/NEW-DATA-1.T15.csv",
+        "data/SML2010/NEW-DATA-2.T15.csv"
     ],
     "target_cols": [
         "4:Temperature_Habitacion_Sensor"

@@ -4,5 +4,6 @@ Implementation of RNN for Time Series prediction from the paper https://arxiv.or
 
 ## Reproducing the results
 
-* Place in the `data/` directory the the datasets. (Ensure to remove the initial
-`#` in the header in case of SML2010 dataset)
+* Download the necessary data through `./get_data.sh`
+
+* All the parameters for the training and features used are stored in `conf/*.json`
