@@ -131,4 +131,3 @@ if __name__ == '__main__':
                 plt.ylabel("target series")
                 plt.xlabel("time steps")
                 plt.savefig(f"log/plot{i}.png", dpi=300)
-                plt.show()
