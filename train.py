@@ -65,7 +65,7 @@ if __name__ == '__main__':
                         total_time = time.time() - initial_time
                         steps_per_second = tf_global_step / total_time
                         average_loss = accumulated_loss / report_frequency
-                        print("[{}] loss={:.2f}, steps/s={:.2f}".format(tf_global_step, average_loss, steps_per_second))
+                        print("[{}] loss={:.5f}, steps/s={:.5f}".format(tf_global_step, average_loss, steps_per_second))
                         writer.add_summary(make_summary({"loss": average_loss}), tf_global_step)
                         accumulated_loss = 0.0
 
@@ -82,6 +82,6 @@ if __name__ == '__main__':
                         writer.add_summary(eval_summary, tf_global_step)
                         writer.add_summary(make_summary({"min RMSE = ": best_RMSE}), tf_global_step)
 
-                        print("[{}] eval_RMSE={:.2f}, best_RMSE={:.2f}".format(tf_global_step, eval_RMSE, best_RMSE))
+                        print("[{}] eval_RMSE={:.5f}, best_RMSE={:.5f}".format(tf_global_step, eval_RMSE, best_RMSE))
                 except tf.errors.OutOfRangeError:
                     break
