@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from typing import Tuple
-from config import Config
+from time_attention.config import Config
 
 
 def get_datasets(

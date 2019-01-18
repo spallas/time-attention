@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.python.layers.core import dense
 from tensorflow.python.ops.rnn_cell_impl import LSTMCell
 
-from config import Config
+from time_attention.config import Config
 
 from math import sqrt
 
