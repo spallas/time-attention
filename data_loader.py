@@ -7,7 +7,7 @@ from config import Config
 
 
 def get_datasets(
-    config: Config, cat_before_window: bool = False
+    config: Config, cat_before_window: bool = False, shuffled: bool = True
 ) -> Tuple[tf.data.Dataset, tf.data.Dataset, tf.data.Dataset]:
     """
     Returns X and y of the data passed as config.
@@ -109,6 +109,8 @@ def get_datasets(
     ))
 
     train_dataset = dataset.take(train_size)
+    if shuffled:
+        train_dataset = train_dataset.shuffle(train_size, reshuffle_each_iteration=True)
     val_dataset = dataset.skip(train_size).take(val_size)
     test_dataset = dataset.skip(train_size + val_size).take(test_size)
     return train_dataset, val_dataset, test_dataset
@@ -128,3 +130,10 @@ if __name__ == "__main__":
     print(f"len(list(it)) {len(list(it))}")
     print(f"len(list(lit)) {len(list(lit))}")
     print(f"len(list(tit)) {len(list(tit))}")
+
+    it = tr.make_one_shot_iterator()
+    print(next(it))
+
+
+    it = tr.make_one_shot_iterator()
+    print(next(it))

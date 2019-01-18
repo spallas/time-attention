@@ -31,15 +31,25 @@ class TimeAttnModel:
                                                    self.config.decay_frequency, self.config.decay_rate,
                                                    staircase=True)
 
-        trainable_params = tf.trainable_variables()
-        gradients = tf.gradients(self.loss, trainable_params)
-        gradients, _ = tf.clip_by_global_norm(gradients, self.config.max_gradient_norm)
+        trainable_params_en = tf.trainable_variables(scope="EncoderRNN")
+        trainable_params_dec = tf.trainable_variables(scope="DecoderRNN")
+
+        gradients_en = tf.gradients(self.loss, trainable_params_en)
+        gradients_dec = tf.gradients(self.loss, trainable_params_dec)
+
+        gradients_en, _ = tf.clip_by_global_norm(gradients_en, self.config.max_gradient_norm)
+        gradients_dec, _ = tf.clip_by_global_norm(gradients_dec, self.config.max_gradient_norm)
+
         optimizers = {
             "adam": tf.train.AdamOptimizer,
             "sgd": tf.train.GradientDescentOptimizer
         }
-        optimizer = optimizers[self.config.optimizer](learning_rate)
-        self.train_op = optimizer.apply_gradients(zip(gradients, trainable_params), global_step=self.global_step)
+
+        optimizer_en = optimizers[self.config.optimizer](learning_rate)
+        optimizer_dec = optimizers[self.config.optimizer](learning_rate)
+
+        self.train_op_en = optimizer_en.apply_gradients(zip(gradients_en, trainable_params_en), global_step=self.global_step)
+        self.train_op_dec = optimizer_dec.apply_gradients(zip(gradients_dec, trainable_params_dec), global_step=self.global_step)
 
         self.RMSE = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(tf.reshape(self.past_history[:, -1], [-1]),
                                                                  tf.reshape(self.predictions, [-1])))))

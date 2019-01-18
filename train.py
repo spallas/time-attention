@@ -57,7 +57,7 @@ if __name__ == '__main__':
             while True:
                 try:
                     x, y = session.run(next_element)
-                    tf_loss, tf_global_step, _ = session.run([model.loss, model.global_step, model.train_op],
+                    tf_loss, tf_global_step, _, __ = session.run([model.loss, model.global_step, model.train_op_en, model.train_op_dec],
                                                              feed_dict={model.driving_series: x,
                                                                         model.past_history: y})
                     accumulated_loss += tf_loss
