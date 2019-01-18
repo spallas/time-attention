@@ -51,8 +51,9 @@ if __name__ == '__main__':
         next_element = iterator.get_next()
         val_next_element = val_iterator.get_next()
         session.run(val_iterator.initializer)
-        for _ in range(config.num_epochs):
+        for i in range(config.num_epochs):
             session.run(iterator.initializer)
+            print(f"====================================== EPOCH {i} ======================================")
             while True:
                 try:
                     x, y = session.run(next_element)
