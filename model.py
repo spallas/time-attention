@@ -155,10 +155,10 @@ class TimeAttnModel:
 
         summary_dict = {}
         summary_dict["RMSE"] = sqrt(RMSE_tot / (num_batches * self.config.batch_size))
-        print("RMSE: {:.2f}%".format(summary_dict["RMSE"]))
+        print("RMSE: {:.2f}".format(summary_dict["RMSE"]))
         summary_dict["MAE"] = MAE_tot / (num_batches * self.config.batch_size)
-        print("MAE: {:.2f}%".format(summary_dict["MAE"]))
+        print("MAE: {:.2f}".format(summary_dict["MAE"]))
         summary_dict["MAPE"] = MAPE_tot / (num_batches * self.config.batch_size)
-        print("MAPE: {:.2f}%".format(summary_dict["MAPE"]))
+        print("MAPE: {:.2f}".format(summary_dict["MAPE"]))
         summary = tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in summary_dict.items()])
         return summary, RMSE, MAE, MAPE
