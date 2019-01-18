@@ -128,10 +128,3 @@ if __name__ == "__main__":
     print(f"len(list(it)) {len(list(it))}")
     print(f"len(list(lit)) {len(list(lit))}")
     print(f"len(list(tit)) {len(list(tit))}")
-
-"""
-
-it = data_w.make_one_shot_iterator()
-for x in it:
-    print(x)
-"""

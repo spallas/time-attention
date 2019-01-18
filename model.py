@@ -1,9 +1,12 @@
 import os
 import tensorflow as tf
 
+from tensorflow.python.layers.core import dense
 from tensorflow.python.ops.rnn_cell_impl import LSTMCell
+
 from config import Config
-from tensorflow.layers import dense
+
+from math import sqrt
 
 from math import sqrt
 
@@ -38,7 +41,8 @@ class TimeAttnModel:
         optimizer = optimizers[self.config.optimizer](learning_rate)
         self.train_op = optimizer.apply_gradients(zip(gradients, trainable_params), global_step=self.global_step)
 
-        self.RMSE = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(tf.reshape(self.past_history[:, -1], [-1]), tf.reshape(self.predictions, [-1])))))
+        self.RMSE = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(tf.reshape(self.past_history[:, -1], [-1]),
+                                                                 tf.reshape(self.predictions, [-1])))))
         self.MAE = tf.reduce_mean(
             tf.abs(
                 tf.subtract(tf.reshape(self.past_history[:, -1], [-1]), tf.reshape(self.predictions, [-1]))
@@ -138,7 +142,8 @@ class TimeAttnModel:
         while True:
             try:
                 x, y = session.run(next_element)
-                RMSE, MAE, MAPE = session.run([self.RMSE, self.MAE, self.MAPE], feed_dict={self.driving_series: x, self.past_history: y})
+                RMSE, MAE, MAPE = session.run([self.RMSE, self.MAE, self.MAPE],
+                                              feed_dict={self.driving_series: x, self.past_history: y})
 
                 RMSE_tot += (RMSE ** 2) * self.config.batch_size
                 MAE_tot += MAE * self.config.batch_size
