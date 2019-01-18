@@ -124,6 +124,7 @@ if __name__ == '__main__':
 
                 all_true = np.array(all_true)
                 all_predicted = np.array(all_predicted)
+                plt.figure()
                 plt.plot(all_true, label="true")
                 plt.plot(all_predicted, label="predicted")
                 plt.legend(loc='upper left')
