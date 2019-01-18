@@ -5,6 +5,8 @@ from tensorflow.python.ops.rnn_cell_impl import LSTMCell
 from config import Config
 from tensorflow.layers import dense
 
+from math import sqrt
+
 
 class TimeAttnModel:
 
@@ -35,6 +37,21 @@ class TimeAttnModel:
         }
         optimizer = optimizers[self.config.optimizer](learning_rate)
         self.train_op = optimizer.apply_gradients(zip(gradients, trainable_params), global_step=self.global_step)
+
+        self.RMSE = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(tf.reshape(self.past_history[:, -1], [-1]), tf.reshape(self.predictions, [-1])))))
+        self.MAE = tf.reduce_mean(
+            tf.abs(
+                tf.subtract(tf.reshape(self.past_history[:, -1], [-1]), tf.reshape(self.predictions, [-1]))
+            )
+        )
+        self.MAPE = tf.reduce_mean(
+            tf.abs(
+                tf.divide(
+                    tf.subtract(tf.reshape(self.past_history[:, -1], [-1]), tf.reshape(self.predictions, [-1])),
+                    tf.reshape(self.past_history[:, -1], [-1])
+                )
+            )
+        )
 
     def get_predictions_and_loss(self, driving_series, past_history):
 
@@ -99,7 +116,7 @@ class TimeAttnModel:
             y_T = tf.layers.dense(tf.layers.dense(d_c, self.config.p), 1)
             y_T = tf.squeeze(y_T)
 
-        loss = tf.losses.mean_squared_error(y_T, past_history[:, self.config.T - 1])
+        loss = tf.losses.mean_squared_error(y_T, past_history[:, - 1])
         return y_T, loss
 
     def restore(self, session):
@@ -110,20 +127,33 @@ class TimeAttnModel:
         session.run(tf.global_variables_initializer())
         saver.restore(session, checkpoint_path)
 
-    def evaluate(self, session):
+    def evaluate(self, session, next_element):
         # TODO(beabevi): implement
-        RMSE = 0.0
-        MAE = 0.0
-        MAPE = 0.0
+        RMSE_tot = 0.0
+        MAE_tot = 0.0
+        MAPE_tot = 0.0
 
-        # :)
+        num_batches = 0
+
+        while True:
+            try:
+                x, y = session.run(next_element)
+                RMSE, MAE, MAPE = session.run([self.RMSE, self.MAE, self.MAPE], feed_dict={self.driving_series: x, self.past_history: y})
+
+                RMSE_tot += (RMSE ** 2) * self.config.batch_size
+                MAE_tot += MAE * self.config.batch_size
+                MAPE_tot += MAPE * self.config.batch_size
+                num_batches += 1
+
+            except tf.errors.OutOfRangeError:
+                break
 
         summary_dict = {}
-        summary_dict["RMSE"] = 0.0
-        print("RMSE: {:.2f}%".format(0.0 * 100))
-        summary_dict["MAE"] = 0.0
-        print("MAE: {:.2f}%".format(0.0 * 100))
-        summary_dict["MAPE"] = 0.0
-        print("MAPE: {:.2f}%".format(0.0 * 100))
+        summary_dict["RMSE"] = sqrt(RMSE_tot / (num_batches * self.config.batch_size))
+        print("RMSE: {:.2f}%".format(summary_dict["RMSE"]))
+        summary_dict["MAE"] = MAE_tot / (num_batches * self.config.batch_size)
+        print("MAE: {:.2f}%".format(summary_dict["MAE"]))
+        summary_dict["MAPE"] = MAPE_tot / (num_batches * self.config.batch_size)
+        print("MAPE: {:.2f}%".format(summary_dict["MAPE"]))
         summary = tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in summary_dict.items()])
         return summary, RMSE, MAE, MAPE
