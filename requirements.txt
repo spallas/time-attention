@@ -1,3 +1,5 @@
+matplotlib
+numpy
 tensorflow
 dataclasses
 dataclasses-json

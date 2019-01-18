@@ -8,8 +8,6 @@ from config import Config
 
 from math import sqrt
 
-from math import sqrt
-
 
 class TimeAttnModel:
 
@@ -142,7 +140,6 @@ class TimeAttnModel:
         saver.restore(session, checkpoint_path)
 
     def evaluate(self, session, next_element):
-        # TODO(beabevi): implement
         RMSE_tot = 0.0
         MAE_tot = 0.0
         MAPE_tot = 0.0
@@ -165,10 +162,7 @@ class TimeAttnModel:
 
         summary_dict = {}
         summary_dict["RMSE"] = sqrt(RMSE_tot / (num_batches * self.config.batch_size))
-        print("RMSE: {:.5f}".format(summary_dict["RMSE"]))
         summary_dict["MAE"] = MAE_tot / (num_batches * self.config.batch_size)
-        print("MAE: {:.5f}".format(summary_dict["MAE"]))
         summary_dict["MAPE"] = MAPE_tot / (num_batches * self.config.batch_size)
-        print("MAPE: {:.5f}".format(summary_dict["MAPE"]))
         summary = tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in summary_dict.items()])
         return summary, summary_dict["RMSE"], summary_dict["MAE"], summary_dict["MAPE"]

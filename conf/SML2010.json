@@ -20,5 +20,6 @@
         "21:Exterior_Entalpic_turbo",
         "24:Day_Of_Week"
     ],
-    "sep": " "
+    "sep": " ",
+    "report_frequency": 300
 }

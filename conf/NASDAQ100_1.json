@@ -11,5 +11,6 @@
     "target_cols": [
         "NDX"
     ],
-    "sep": ","
+    "sep": ",",
+    "report_frequency": 30
 }

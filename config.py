@@ -76,6 +76,11 @@ class Config(object):
         Portion of the data to be used as training set. The remainder of
         the portion is equally split into test and validation.
 
+    report_frequency:
+        Print loss and train speed each [this param] batches
+
+    plot_frequency:
+        Plot true and predicted curves each [this param] epochs
     """
 
     decay_rate: float
@@ -97,6 +102,8 @@ class Config(object):
     num_epochs: int = 10
     log_dir: str = "log/"
     train_ratio: float = 0.8
+    report_frequency: int = 50
+    plot_frequency: int = 10
 
 
 # Test
