@@ -26,7 +26,7 @@ fi
 
 # SML2010 Processing
 mv NEW-DATA.zip SML2010.zip
-unzip SML2010.zip -d SML2010
+unzip SML2010.zip -q -d SML2010
 cd SML2010
 
 # Remove first 4 chars of each file making it a proper csv
@@ -40,5 +40,5 @@ rm NEW-DATA-2.T15.txt
 cd ..
 
 # NASDAQ100 Processing
-unzip nasdaq100.zip
+unzip -q qnasdaq100.zip
 rm -r __MACOSX
