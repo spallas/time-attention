@@ -21,6 +21,10 @@ def make_summary(value_dict):
 
 
 if __name__ == '__main__':
+    # set seeds for reproducibility
+    tf.set_random_seed(1234)
+    np.random.seed(42)
+
     # load hyper-parameters from configuration file
 
     with open("conf/NASDAQ100.json") as f:
