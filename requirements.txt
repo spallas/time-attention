@@ -1,5 +1,6 @@
-matplotlib
-numpy
-tensorflow
-dataclasses
-dataclasses-json
+matplotlib==3.0.2
+numpy==1.15.4
+tensorflow==1.12.0
+dataclasses==0.6
+dataclasses-json==0.2.1
+pandas==0.23.4
