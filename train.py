@@ -20,6 +20,34 @@ def make_summary(value_dict):
     return tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in value_dict.items()])
 
 
+def plot(session, model, next_element):
+    all_true = []
+    all_predicted = []
+    while True:
+        try:
+            x, y = session.run(next_element)
+            predictions = session.run(model.predictions, {model.driving_series: x, model.past_history: y})
+            true = np.reshape(y[:, -1], [-1]).tolist()
+            predicted = np.reshape(predictions, [-1]).tolist()
+            all_true += true
+            all_predicted += predicted
+
+        except tf.errors.OutOfRangeError:
+            break
+
+    all_true = np.array(all_true)
+    all_predicted = np.array(all_predicted)
+
+    plt.figure()
+    plt.plot(all_true, label="true")
+    plt.plot(all_predicted, label="predicted")
+    plt.legend(loc='upper left')
+    plt.title("Test data")
+    plt.ylabel("target series")
+    plt.xlabel("time steps")
+    plt.savefig(f"log/plot{i}.png", dpi=300)
+
+
 if __name__ == '__main__':
     # set seeds for reproducibility
     tf.set_random_seed(1234)
@@ -34,12 +62,11 @@ if __name__ == '__main__':
     train_set = train_set.batch(config.batch_size, drop_remainder=True)
     val_set = val_set.batch(config.batch_size, drop_remainder=True)
     test_set = test_set.batch(config.batch_size, drop_remainder=True)
+
     model = model.TimeAttnModel(config)
 
     report_frequency = config.report_frequency
-
     saver = tf.train.Saver()
-
     log_dir = config.log_dir
     writer = tf.summary.FileWriter(log_dir, flush_secs=20)
 
@@ -53,10 +80,11 @@ if __name__ == '__main__':
         session.run(tf.global_variables_initializer())
         tf_global_step = 0
 
-        iterator = train_set.make_initializable_iterator()
+        train_iterator = train_set.make_initializable_iterator()
         val_iterator = val_set.make_initializable_iterator()
         test_iterator = test_set.make_initializable_iterator()
-        next_element = iterator.get_next()
+
+        train_next_element = train_iterator.get_next()
         val_next_element = val_iterator.get_next()
         test_next_element = test_iterator.get_next()
 
@@ -69,14 +97,13 @@ if __name__ == '__main__':
         else:
             init_global_step = 0
 
-        session.run(val_iterator.initializer)
         for i in range(config.num_epochs):
-            session.run(iterator.initializer)
+            session.run(train_iterator.initializer)
             print(f"====================================== EPOCH {i} ======================================")
             while True:
                 try:
-                    x, y = session.run(next_element)
-                    tf_loss, tf_global_step, _, __ = session.run([model.loss, model.global_step,
+                    x, y = session.run(train_next_element)
+                    tf_loss, tf_global_step, _, _ = session.run([model.loss, model.global_step,
                                                                   model.train_op_en, model.train_op_dec],
                                                                  feed_dict={model.driving_series: x,
                                                                             model.past_history: y})
@@ -93,9 +120,9 @@ if __name__ == '__main__':
                 except tf.errors.OutOfRangeError:
                     break
 
+            session.run(val_iterator.initializer)
             saver.save(session, os.path.join(log_dir, "model"), global_step=tf_global_step)
             eval_summary, eval_RMSE, eval_MAE, eval_MAPE = model.evaluate(session, val_next_element)
-            session.run(val_iterator.initializer)
 
             if eval_RMSE < best_RMSE:
                 best_RMSE = eval_RMSE
@@ -112,27 +139,4 @@ if __name__ == '__main__':
 
             if i % config.plot_frequency == 0:
                 session.run(test_iterator.initializer)
-                all_true = []
-                all_predicted = []
-                while True:
-                    try:
-                        x, y = session.run(test_next_element)
-                        predictions = session.run(model.predictions, {model.driving_series: x, model.past_history: y})
-                        true = np.reshape(y[:, -1], [-1]).tolist()
-                        predicted = np.reshape(predictions, [-1]).tolist()
-                        all_true += true
-                        all_predicted += predicted
-
-                    except tf.errors.OutOfRangeError:
-                        break
-
-                all_true = np.array(all_true)
-                all_predicted = np.array(all_predicted)
-                plt.figure()
-                plt.plot(all_true, label="true")
-                plt.plot(all_predicted, label="predicted")
-                plt.legend(loc='upper left')
-                plt.title("Test data")
-                plt.ylabel("target series")
-                plt.xlabel("time steps")
-                plt.savefig(f"log/plot{i}.png", dpi=300)
+                plot(session, model, test_next_element)
