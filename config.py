@@ -105,6 +105,17 @@ class Config(object):
     report_frequency: int = 50
     plot_frequency: int = 10
 
+    @property
+    def usecols(self):
+        path = self.data_paths[0]
+        with open(path) as f:
+            header = f.readline().strip().split(self.sep)
+        return [col for col in header if col not in self.drop_cols]
+
+    @property
+    def driving_series(self):
+        return [col for col in self.usecols if col not in self.target_cols]
+
 
 # Test
 if __name__ == "__main__":

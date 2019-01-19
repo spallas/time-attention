@@ -2,8 +2,25 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 
-from typing import Tuple
+from typing import Tuple, List
 from config import Config
+
+
+def window(
+    df: pd.DataFrame,
+    size: int,
+    driving_series: List[str],
+    target_series: List[str],
+):
+    X = df[driving_series].values
+    y = df[target_series].values
+    X_T = []
+    y_T = []
+    for i in range(len(X) - size):
+        X_T.append(X[i: i + size])
+        y_T.append(y[i: i + size])
+
+    return np.array(X_T), np.array(y_T)
 
 
 def get_datasets(
@@ -57,43 +74,27 @@ def get_datasets(
     ```
     """
 
-    def window(df, size, driving_series, target_series):
-        X = df[driving_series].values
-        y = df[target_series].values
-        X_T = []
-        y_T = []
-        for i in range(len(X) - size):
-            X_T.append(X[i : i + size])
-            y_T.append(y[i : i + size])
-
-        return np.array(X_T), np.array(y_T)
-
-    path = config.data_paths[0]
-
-    with open(path) as f:
-        header = f.readline().strip().split(config.sep)
-
-    usecols = [col for col in header if col not in config.drop_cols]
-
-    driving_series = [col for col in usecols if col not in config.target_cols]
-
-    config.n = len(driving_series)
+    config.n = len(config.driving_series)
     dfs = []
     for path in config.data_paths:
-        dfs.append(pd.read_csv(path, sep=config.sep, usecols=usecols))
+        dfs.append(pd.read_csv(path, sep=config.sep, usecols=config.usecols))
 
     df = None
     X_T = None
     y_T = None
     if cat_before_window:
         df = pd.concat(dfs)
-        X_T, y_T = window(df, config.T, driving_series, config.target_cols)
+        X_T, y_T = window(
+            df, config.T, config.driving_series, config.target_cols
+        )
         X_T = X_T.transpose((0, 2, 1))
     else:
         X_Ts = []
         y_Ts = []
         for df in dfs:
-            X_T, y_T = window(df, config.T, driving_series, config.target_cols)
+            X_T, y_T = window(
+                df, config.T, config.driving_series, config.target_cols
+            )
             X_T = X_T.transpose((0, 2, 1))
             X_Ts.append(X_T)
             y_Ts.append(np.squeeze(y_T))
@@ -103,14 +104,18 @@ def get_datasets(
     val_size = int(((1 - config.train_ratio) / 2) * len(X_T))
     test_size = val_size
 
-    dataset = tf.data.Dataset.zip((
-        tf.data.Dataset.from_tensor_slices(X_T),
-        tf.data.Dataset.from_tensor_slices(y_T),
-    ))
+    dataset = tf.data.Dataset.zip(
+        (
+            tf.data.Dataset.from_tensor_slices(X_T),
+            tf.data.Dataset.from_tensor_slices(y_T),
+        )
+    )
 
     train_dataset = dataset.take(train_size)
     if shuffled:
-        train_dataset = train_dataset.shuffle(train_size, reshuffle_each_iteration=True)
+        train_dataset = train_dataset.shuffle(
+            train_size, reshuffle_each_iteration=True
+        )
     val_dataset = dataset.skip(train_size).take(val_size)
     test_dataset = dataset.skip(train_size + val_size).take(test_size)
     return train_dataset, val_dataset, test_dataset
@@ -133,7 +138,6 @@ if __name__ == "__main__":
 
     it = tr.make_one_shot_iterator()
     print(next(it))
-
 
     it = tr.make_one_shot_iterator()
     print(next(it))
