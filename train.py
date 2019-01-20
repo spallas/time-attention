@@ -20,7 +20,7 @@ def make_summary(value_dict):
     return tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in value_dict.items()])
 
 
-def plot(session, model, next_element):
+def plot(session, model, next_element, i):
     all_true = []
     all_predicted = []
     while True:
@@ -139,4 +139,4 @@ if __name__ == '__main__':
 
             if i % config.plot_frequency == 0:
                 session.run(test_iterator.initializer)
-                plot(session, model, test_next_element)
+                plot(session, model, test_next_element, i)
