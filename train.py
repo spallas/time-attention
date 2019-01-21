@@ -6,9 +6,14 @@ import numpy as np
 import tensorflow as tf
 from config import Config
 
-import model
+import model as _model
 from data_loader import get_datasets
 import matplotlib.pyplot as plt
+
+flags = tf.app.flags
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string('config', 'conf/SML2010.json', 'Path to json file with the configuration to be run')
 
 
 def copy_checkpoint(source, target):
@@ -49,11 +54,9 @@ def plot(session, model, next_element, i):
     plt.close()
 
 
-if __name__ == '__main__':
+def main(argv):
     # load hyper-parameters from configuration file
-    with open("conf/SML2010.json") as f:
-        config = Config.from_json(f.read())
-
+    config = Config.from_file(FLAGS.config)
     # set seeds for reproducibility
     tf.set_random_seed(config.seed)
     np.random.seed(config.seed)
@@ -63,7 +66,7 @@ if __name__ == '__main__':
     val_set = val_set.batch(config.batch_size, drop_remainder=True)
     test_set = test_set.batch(config.batch_size, drop_remainder=True)
 
-    model = model.TimeAttnModel(config)
+    model = _model.TimeAttnModel(config)
 
     report_frequency = config.report_frequency
     saver = tf.train.Saver()
@@ -140,3 +143,7 @@ if __name__ == '__main__':
             if i % config.plot_frequency == 0:
                 session.run(test_iterator.initializer)
                 plot(session, model, test_next_element, i)
+
+
+if __name__ == '__main__':
+    tf.app.run(main=main)

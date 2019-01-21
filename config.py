@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 
 from dataclasses import dataclass, field
@@ -126,6 +127,19 @@ class Config(object):
     @property
     def driving_series(self):
         return [col for col in self.usecols if col not in self.target_cols]
+
+    @classmethod
+    def from_file(cls, path):
+        with open(path) as f:
+            c = cls.from_json(f.read())
+        return c
+
+    def to_file(self, path):
+        with open(path, "w") as f:
+            pretty_json = json.dumps(
+                json.loads(self.to_json()), indent=4, sort_keys=True
+            )
+            f.write(pretty_json)
 
 
 # Test
