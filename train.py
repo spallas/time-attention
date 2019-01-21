@@ -49,14 +49,13 @@ def plot(session, model, next_element, i):
 
 
 if __name__ == '__main__':
-    # set seeds for reproducibility
-    tf.set_random_seed(1234)
-    np.random.seed(42)
-
     # load hyper-parameters from configuration file
-
-    with open("conf/NASDAQ100.json") as f:
+    with open("conf/SML2010.json") as f:
         config = Config.from_json(f.read())
+
+    # set seeds for reproducibility
+    tf.set_random_seed(config.seed)
+    np.random.seed(config.seed)
 
     train_set, val_set, test_set = get_datasets(config)
     train_set = train_set.batch(config.batch_size, drop_remainder=True)

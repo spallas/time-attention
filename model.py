@@ -46,7 +46,7 @@ class TimeAttnModel:
         optimizer_en = optimizers[self.config.optimizer](learning_rate)
         optimizer_dec = optimizers[self.config.optimizer](learning_rate)
 
-        self.train_op_en = optimizer_en.apply_gradients(zip(gradients_en, trainable_params_en), global_step=self.global_step)
+        self.train_op_en = optimizer_en.apply_gradients(zip(gradients_en, trainable_params_en))
         self.train_op_dec = optimizer_dec.apply_gradients(zip(gradients_dec, trainable_params_dec), global_step=self.global_step)
 
         self.RMSE = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(tf.reshape(self.past_history[:, -1], [-1]),

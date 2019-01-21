@@ -104,6 +104,7 @@ class Config(object):
     train_ratio: float = 0.8
     report_frequency: int = 50
     plot_frequency: int = 10
+    seed: int = 42
 
     @property
     def usecols(self):
