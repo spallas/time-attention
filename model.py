@@ -1,4 +1,3 @@
-import os
 import tensorflow as tf
 
 from tensorflow.python.layers.core import dense
@@ -133,14 +132,6 @@ class TimeAttnModel:
 
         loss = tf.losses.mean_squared_error(y_T, past_history[:, - 1])
         return y_T, loss
-
-    def restore(self, session):
-        vars_to_restore = [v for v in tf.global_variables()]
-        saver = tf.train.Saver(vars_to_restore)
-        checkpoint_path = os.path.join(self.config.log_path / "model.max.ckpt")
-        print("Restoring from {}".format(checkpoint_path))
-        session.run(tf.global_variables_initializer())
-        saver.restore(session, checkpoint_path)
 
     def evaluate(self, session, next_element):
         RMSE_tot = 0.0
