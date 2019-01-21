@@ -84,6 +84,11 @@ class Config(object):
 
     seed:
         Seed used by frameworks to ensure reproducibility
+
+    inp_att_enabled:
+        Whether the input attention is enabled or not
+    temporal_att_enabled:
+        Whether the temporal attention is enabled or not
     """
 
     decay_rate: float
@@ -109,7 +114,7 @@ class Config(object):
     plot_frequency: int = 10
     seed: int = 42
     inp_att_enabled: bool = True
-    out_att_enabled: bool = True
+    temporal_att_enabled: bool = True
 
     @property
     def usecols(self):

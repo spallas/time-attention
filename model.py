@@ -114,7 +114,7 @@ class TimeAttnModel:
 
             for t in range(self.config.T):
                 # if t > 0: tf.get_variable_scope().reuse_variables()
-                if self.config.out_att_enabled:
+                if self.config.temporal_att_enabled:
                     beta = self._attention(d, s_, encoder_outputs)
 
                     c_t = tf.reduce_sum(beta * encoder_outputs, axis=1)
