@@ -15,7 +15,7 @@ class TimeAttnModel:
         self.config = config
 
         self.driving_series = tf.placeholder(tf.float32, [None,  # batch size
-                                                          None,  # n (number of supporting series)
+                                                          self.config.n,  # n (number of supporting series)
                                                           self.config.T])  # T (length of a time window)
         self.past_history = tf.placeholder(tf.float32, [None,  # batch size
                                                         self.config.T])  # T
@@ -65,6 +65,16 @@ class TimeAttnModel:
             )
         )
 
+    def _attention(self, hidden_state, cell_state, input):
+        attn_input = tf.concat([hidden_state, cell_state], axis=1)
+        attn_input = tf.reshape(tf.tile(attn_input, [1, input.shape[1]]),
+                                [self.config.batch_size, input.shape[1], 2 * hidden_state.shape[1]]
+        )
+        z = tf.tanh(dense(attn_input, input.shape[2]) + dense(input, input.shape[2], use_bias=False))
+
+        pre_softmax_attn = tf.layers.dense(z, 1)
+        return tf.nn.softmax(pre_softmax_attn)
+
     def get_predictions_and_loss(self, driving_series, past_history):
 
         # define encoder
@@ -78,17 +88,13 @@ class TimeAttnModel:
 
             for t in range(self.config.T):
                 # if t > 0: tf.get_variable_scope().reuse_variables()
-                attn_input = tf.concat([h, s], axis=1)
-                attn_input = tf.reshape(tf.tile(attn_input, [1, self.config.n]),
-                                        [self.config.batch_size, self.config.n, 2*self.config.m])
+                if self.config.inp_att_enabled:
+                    alpha = self._attention(h, s, driving_series)
 
-                z = tf.tanh(dense(attn_input, self.config.T) + dense(driving_series, self.config.T, use_bias=False))
-
-                e_t = tf.layers.dense(z, 1)
-                alpha = tf.nn.softmax(e_t)  # attention weights
-
-                # input weighted with attention weights
-                x_tilde = tf.squeeze(alpha) * driving_series[:, :, t]
+                    # input weighted with attention weights
+                    x_tilde = tf.squeeze(alpha) * driving_series[:, :, t]
+                else:
+                    x_tilde = driving_series[:, :, t]
 
                 (cell_output, state) = cell(x_tilde, state)
                 s, h = state
@@ -108,15 +114,12 @@ class TimeAttnModel:
 
             for t in range(self.config.T):
                 # if t > 0: tf.get_variable_scope().reuse_variables()
-                attn_input = tf.concat([d, s_], axis=1)
-                attn_input = tf.reshape(tf.tile(attn_input, [1, self.config.T]),
-                                        [self.config.batch_size, self.config.T, 2 * self.config.p])
+                if self.config.out_att_enabled:
+                    beta = self._attention(d, s_, encoder_outputs)
 
-                z = tf.tanh(dense(attn_input, self.config.m) + dense(encoder_outputs, self.config.m, use_bias=False))
-                l_t = tf.layers.dense(z, 1)
-                beta = tf.nn.softmax(l_t)  # attention weights
-
-                c_t = tf.reduce_sum(beta * encoder_outputs, axis=1)
+                    c_t = tf.reduce_sum(beta * encoder_outputs, axis=1)
+                else:
+                    c_t = encoder_outputs[:, t, :]
 
                 if t < self.config.T - 1:
                     y_c = tf.concat([tf.expand_dims(past_history[:, t], -1), c_t], axis=1)

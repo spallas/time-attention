@@ -106,5 +106,5 @@ venv.bak/
 .DS_Store/
 .idea/
 data/
-log/
+log*
 *.h5

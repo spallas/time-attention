@@ -81,6 +81,9 @@ class Config(object):
 
     plot_frequency:
         Plot true and predicted curves each [this param] epochs
+
+    seed:
+        Seed used by frameworks to ensure reproducibility
     """
 
     decay_rate: float
@@ -105,6 +108,8 @@ class Config(object):
     report_frequency: int = 50
     plot_frequency: int = 10
     seed: int = 42
+    inp_att_enabled: bool = True
+    out_att_enabled: bool = True
 
     @property
     def usecols(self):
