@@ -81,6 +81,14 @@ class Config(object):
 
     plot_frequency:
         Plot true and predicted curves each [this param] epochs
+
+    seed:
+        Seed used by frameworks to ensure reproducibility
+
+    impl:
+        Implementation to be used: must be in
+        {'da_rnn', 'ia_rnn', 'ta_rnn', 'simple_rnn'}. Defaults
+        to 'da_rnn'
     """
 
     decay_rate: float
@@ -105,6 +113,7 @@ class Config(object):
     report_frequency: int = 50
     plot_frequency: int = 10
     seed: int = 42
+    impl: str = 'da_rnn'
 
     @property
     def usecols(self):

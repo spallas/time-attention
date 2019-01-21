@@ -12,6 +12,12 @@ from math import sqrt
 class TimeAttnModel:
 
     def __init__(self, config: Config):
+        self.implementations = {
+            'da_rnn': self._get_predictions_and_loss_da_rnn,
+            'ta_rnn': self._get_predictions_and_loss_ta_rnn,
+            'ia_rnn': self._get_predictions_and_loss_ia_rnn,
+            'simple_rnn': self._get_predictions_and_loss_simple_rnn
+        }
         self.config = config
 
         self.driving_series = tf.placeholder(tf.float32, [None,  # batch size
@@ -65,7 +71,7 @@ class TimeAttnModel:
             )
         )
 
-    def get_predictions_and_loss(self, driving_series, past_history):
+    def _get_predictions_and_loss_da_rnn(self, driving_series, past_history):
 
         # define encoder
         with tf.variable_scope("EncoderRNN"):
@@ -130,6 +136,27 @@ class TimeAttnModel:
 
         loss = tf.losses.mean_squared_error(y_T, past_history[:, - 1])
         return y_T, loss
+
+    def _get_predictions_and_loss_ta_rnn(self, driving_series, past_history):
+        """
+        Only time attention active
+        """
+        raise NotImplementedError()
+
+    def _get_predictions_and_loss_ia_rnn(self, driving_series, past_history):
+        """
+        Only input attention active
+        """
+        raise NotImplementedError()
+
+    def _get_predictions_and_loss_simple_rnn(self, driving_series, past_history):
+        """
+        No attention active
+        """
+        raise NotImplementedError()
+
+    def get_predictions_and_loss(self, driving_series, past_history):
+        return self.implementations[self.config.impl](driving_series, past_history)
 
     def restore(self, session):
         vars_to_restore = [v for v in tf.global_variables()]
