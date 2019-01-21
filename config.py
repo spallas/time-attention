@@ -1,4 +1,5 @@
 from typing import List, Optional
+from pathlib import Path
 
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
@@ -115,6 +116,10 @@ class Config(object):
     seed: int = 42
     inp_att_enabled: bool = True
     temporal_att_enabled: bool = True
+
+    @property
+    def log_path(self):
+        return Path(self.log_dir)
 
     @property
     def usecols(self):

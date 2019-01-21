@@ -137,7 +137,7 @@ class TimeAttnModel:
     def restore(self, session):
         vars_to_restore = [v for v in tf.global_variables()]
         saver = tf.train.Saver(vars_to_restore)
-        checkpoint_path = os.path.join(self.config.log_dir, "model.max.ckpt")
+        checkpoint_path = os.path.join(self.config.log_path / "model.max.ckpt")
         print("Restoring from {}".format(checkpoint_path))
         session.run(tf.global_variables_initializer())
         saver.restore(session, checkpoint_path)

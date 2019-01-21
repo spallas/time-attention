@@ -1,6 +1,7 @@
 import shutil
 import time
-import os
+
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -18,14 +19,14 @@ flags.DEFINE_string('config', 'conf/SML2010.json', 'Path to json file with the c
 
 def copy_checkpoint(source, target):
     for ext in (".index", ".data-00000-of-00001"):
-        shutil.copyfile(source + ext, target + ext)
+        shutil.copyfile(source.with_suffix(ext), target.with_suffix(ext))
 
 
 def make_summary(value_dict):
     return tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in value_dict.items()])
 
 
-def plot(session, model, next_element, i):
+def plot(session, model, next_element, i, log_path: Path):
     all_true = []
     all_predicted = []
     while True:
@@ -50,7 +51,7 @@ def plot(session, model, next_element, i):
     plt.title("Test data")
     plt.ylabel("target series")
     plt.xlabel("time steps")
-    plt.savefig(f"log/plot{i}.png", dpi=300)
+    plt.savefig(log_path / f"plot{i}.png", dpi=300)
     plt.close()
 
 
@@ -70,8 +71,8 @@ def main(argv):
 
     report_frequency = config.report_frequency
     saver = tf.train.Saver()
-    log_dir = config.log_dir
-    writer = tf.summary.FileWriter(log_dir, flush_secs=20)
+    log_path = config.log_path
+    writer = tf.summary.FileWriter(log_path, flush_secs=20)
 
     best_RMSE = float("inf")
     best_MAE = float("inf")
@@ -92,7 +93,7 @@ def main(argv):
         test_next_element = test_iterator.get_next()
 
         # Restore from last evaluated epoch
-        ckpt = tf.train.get_checkpoint_state(log_dir)
+        ckpt = tf.train.get_checkpoint_state(log_path)
         if ckpt and ckpt.model_checkpoint_path:
             print("Restoring from: {}".format(ckpt.model_checkpoint_path))
             saver.restore(session, ckpt.model_checkpoint_path)
@@ -124,13 +125,13 @@ def main(argv):
                     break
 
             session.run(val_iterator.initializer)
-            saver.save(session, os.path.join(log_dir, "model"), global_step=tf_global_step)
+            saver.save(session, log_path / "model", global_step=tf_global_step)
             eval_summary, eval_RMSE, eval_MAE, eval_MAPE = model.evaluate(session, val_next_element)
 
             if eval_RMSE < best_RMSE:
                 best_RMSE = eval_RMSE
-                copy_checkpoint(os.path.join(log_dir, "model-{}".format(tf_global_step)),
-                                os.path.join(log_dir, "model.max.ckpt"))
+                copy_checkpoint(log_path / "model-{}".format(tf_global_step),
+                                log_path / "model.max.ckpt")
 
             writer.add_summary(eval_summary, tf_global_step)
             writer.add_summary(make_summary({"min RMSE = ": best_RMSE}), tf_global_step)
@@ -142,7 +143,7 @@ def main(argv):
 
             if i % config.plot_frequency == 0:
                 session.run(test_iterator.initializer)
-                plot(session, model, test_next_element, i)
+                plot(session, model, test_next_element, i, config.log_path)
 
 
 if __name__ == '__main__':
