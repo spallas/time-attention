@@ -48,8 +48,8 @@ def plot(session, model, next_element, i, log_path: Path):
     plt.plot(all_true, label="true")
     plt.plot(all_predicted, label="predicted")
     plt.legend(loc='upper left')
-    plt.title("Test data")
-    plt.ylabel("target series")
+    plt.title("Validation data")
+    plt.ylabel("target serie")
     plt.xlabel("time steps")
     plt.savefig(log_path / f"plot{i}.png", dpi=300)
     plt.close()
@@ -70,7 +70,7 @@ def main(argv):
     model = _model.TimeAttnModel(config)
 
     report_frequency = config.report_frequency
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=1)
     log_path = config.log_path
     writer = tf.summary.FileWriter(log_path, flush_secs=20)
 
@@ -126,24 +126,24 @@ def main(argv):
 
             session.run(val_iterator.initializer)
             saver.save(session, log_path / "model", global_step=tf_global_step)
-            eval_summary, eval_RMSE, eval_MAE, eval_MAPE = model.evaluate(session, val_next_element)
+            val_scores = model.evaluate(session, val_next_element)
 
-            if eval_RMSE < best_RMSE:
-                best_RMSE = eval_RMSE
+            if val_scores["RMSE"] < best_RMSE:
+                best_RMSE = val_scores["RMSE"]
                 copy_checkpoint(log_path / "model-{}".format(tf_global_step),
                                 log_path / "model.max.ckpt")
 
-            writer.add_summary(eval_summary, tf_global_step)
+            writer.add_summary(make_summary(val_scores), tf_global_step)
             writer.add_summary(make_summary({"min RMSE = ": best_RMSE}), tf_global_step)
             print("----------------------")
-            print("RMSE: {:.5f}".format(eval_RMSE))
-            print("MAE: {:.5f}".format(eval_MAE))
-            print("MAPE: {:.5f}".format(eval_MAPE))
+            print("RMSE: {:.5f}".format(val_scores["RMSE"]))
+            print("MAE: {:.5f}".format(val_scores["MAE"]))
+            print("MAPE: {:.5f}".format(val_scores["MAPE"]))
             print("best_RMSE={:.5f}".format(best_RMSE))
 
             if i % config.plot_frequency == 0:
-                session.run(test_iterator.initializer)
-                plot(session, model, test_next_element, i, config.log_path)
+                session.run(val_iterator.initializer)
+                plot(session, model, val_next_element, i, config.log_path)
 
 
 if __name__ == '__main__':

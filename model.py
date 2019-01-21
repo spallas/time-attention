@@ -62,7 +62,7 @@ class TimeAttnModel:
                     tf.reshape(self.past_history[:, -1], [-1])
                 )
             )
-        )
+        ) * 100
 
     def _attention(self, hidden_state, cell_state, input):
         attn_input = tf.concat([hidden_state, cell_state], axis=1)
@@ -154,9 +154,8 @@ class TimeAttnModel:
             except tf.errors.OutOfRangeError:
                 break
 
-        summary_dict = {}
-        summary_dict["RMSE"] = sqrt(RMSE_tot / (num_batches * self.config.batch_size))
-        summary_dict["MAE"] = MAE_tot / (num_batches * self.config.batch_size)
-        summary_dict["MAPE"] = MAPE_tot / (num_batches * self.config.batch_size)
-        summary = tf.Summary(value=[tf.Summary.Value(tag=k, simple_value=v) for k, v in summary_dict.items()])
-        return summary, summary_dict["RMSE"], summary_dict["MAE"], summary_dict["MAPE"]
+        scores = {}
+        scores["RMSE"] = sqrt(RMSE_tot / (num_batches * self.config.batch_size))
+        scores["MAE"] = MAE_tot / (num_batches * self.config.batch_size)
+        scores["MAPE"] = MAPE_tot / (num_batches * self.config.batch_size)
+        return scores

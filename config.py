@@ -136,6 +136,7 @@ class Config(object):
     def from_file(cls, path):
         with open(path) as f:
             c = cls.from_json(f.read())
+        c.log_dir = Path(c.log_dir) / Path(path).with_suffix('').name
         return c
 
     def to_file(self, path):
