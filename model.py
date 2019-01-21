@@ -116,7 +116,7 @@ class TimeAttnModel:
                 l_t = tf.layers.dense(z, 1)
                 beta = tf.nn.softmax(l_t)  # attention weights
 
-                c_t = tf.reduce_sum(beta * tf.squeeze(encoder_outputs), axis=1)
+                c_t = tf.reduce_sum(beta * encoder_outputs, axis=1)
 
                 if t < self.config.T - 1:
                     y_c = tf.concat([tf.expand_dims(past_history[:, t], -1), c_t], axis=1)
