@@ -12,12 +12,6 @@ from math import sqrt
 class TimeAttnModel:
 
     def __init__(self, config: Config):
-        self.implementations = {
-            'da_rnn': self._get_predictions_and_loss_da_rnn,
-            'ta_rnn': self._get_predictions_and_loss_ta_rnn,
-            'ia_rnn': self._get_predictions_and_loss_ia_rnn,
-            'simple_rnn': self._get_predictions_and_loss_simple_rnn
-        }
         self.config = config
 
         self.driving_series = tf.placeholder(tf.float32, [None,  # batch size
@@ -81,7 +75,7 @@ class TimeAttnModel:
         pre_softmax_attn = tf.layers.dense(z, 1)
         return tf.nn.softmax(pre_softmax_attn)
 
-    def _get_predictions_and_loss_da_rnn(self, driving_series, past_history):
+    def get_predictions_and_loss(self, driving_series, past_history):
 
         # define encoder
         with tf.variable_scope("EncoderRNN"):
@@ -94,10 +88,13 @@ class TimeAttnModel:
 
             for t in range(self.config.T):
                 # if t > 0: tf.get_variable_scope().reuse_variables()
-                alpha = self._attention(h, s, driving_series)
+                if self.config.inp_att_enabled:
+                    alpha = self._attention(h, s, driving_series)
 
-                # input weighted with attention weights
-                x_tilde = tf.squeeze(alpha) * driving_series[:, :, t]
+                    # input weighted with attention weights
+                    x_tilde = tf.squeeze(alpha) * driving_series[:, :, t]
+                else:
+                    x_tilde = driving_series[:, :, t]
 
                 (cell_output, state) = cell(x_tilde, state)
                 s, h = state
@@ -117,9 +114,12 @@ class TimeAttnModel:
 
             for t in range(self.config.T):
                 # if t > 0: tf.get_variable_scope().reuse_variables()
-                beta = self._attention(d, s_, encoder_outputs)
+                if self.config.out_att_enabled:
+                    beta = self._attention(d, s_, encoder_outputs)
 
-                c_t = tf.reduce_sum(beta * encoder_outputs, axis=1)
+                    c_t = tf.reduce_sum(beta * encoder_outputs, axis=1)
+                else:
+                    c_t = encoder_outputs[:, t, :]
 
                 if t < self.config.T - 1:
                     y_c = tf.concat([tf.expand_dims(past_history[:, t], -1), c_t], axis=1)
@@ -133,27 +133,6 @@ class TimeAttnModel:
 
         loss = tf.losses.mean_squared_error(y_T, past_history[:, - 1])
         return y_T, loss
-
-    def _get_predictions_and_loss_ta_rnn(self, driving_series, past_history):
-        """
-        Only time attention active
-        """
-        raise NotImplementedError()
-
-    def _get_predictions_and_loss_ia_rnn(self, driving_series, past_history):
-        """
-        Only input attention active
-        """
-        raise NotImplementedError()
-
-    def _get_predictions_and_loss_simple_rnn(self, driving_series, past_history):
-        """
-        No attention active
-        """
-        raise NotImplementedError()
-
-    def get_predictions_and_loss(self, driving_series, past_history):
-        return self.implementations[self.config.impl](driving_series, past_history)
 
     def restore(self, session):
         vars_to_restore = [v for v in tf.global_variables()]
