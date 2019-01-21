@@ -46,6 +46,7 @@ def plot(session, model, next_element, i):
     plt.ylabel("target series")
     plt.xlabel("time steps")
     plt.savefig(f"log/plot{i}.png", dpi=300)
+    plt.close()
 
 
 if __name__ == '__main__':
