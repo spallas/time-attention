@@ -17,10 +17,42 @@ def window(
     X_T = []
     y_T = []
     for i in range(len(X) - size):
-        X_T.append(X[i: i + size])
-        y_T.append(y[i: i + size])
+        X_T.append(X[i : i + size])
+        y_T.append(y[i : i + size])
 
     return np.array(X_T), np.array(y_T)
+
+
+def get_np_dataset(
+    config: Config, cat_before_window: bool = False
+) -> Tuple[np.ndarray, np.ndarray]:
+    config.n = len(config.driving_series)
+    dfs = []
+    for path in config.data_paths:
+        dfs.append(pd.read_csv(path, sep=config.sep, usecols=config.usecols))
+
+    df = None
+    X_T = None
+    y_T = None
+    if cat_before_window:
+        df = pd.concat(dfs)
+        X_T, y_T = window(
+            df, config.T, config.driving_series, config.target_cols
+        )
+        X_T = X_T.transpose((0, 2, 1))
+    else:
+        X_Ts = []
+        y_Ts = []
+        for df in dfs:
+            X_T, y_T = window(
+                df, config.T, config.driving_series, config.target_cols
+            )
+            X_T = X_T.transpose((0, 2, 1))
+            X_Ts.append(X_T)
+            y_Ts.append(np.squeeze(y_T))
+        X_T = np.vstack(X_Ts)
+        y_T = np.vstack(y_Ts)
+    return X_T, y_T
 
 
 def get_datasets(
@@ -73,33 +105,7 @@ def get_datasets(
             print(x, y)
     ```
     """
-
-    config.n = len(config.driving_series)
-    dfs = []
-    for path in config.data_paths:
-        dfs.append(pd.read_csv(path, sep=config.sep, usecols=config.usecols))
-
-    df = None
-    X_T = None
-    y_T = None
-    if cat_before_window:
-        df = pd.concat(dfs)
-        X_T, y_T = window(
-            df, config.T, config.driving_series, config.target_cols
-        )
-        X_T = X_T.transpose((0, 2, 1))
-    else:
-        X_Ts = []
-        y_Ts = []
-        for df in dfs:
-            X_T, y_T = window(
-                df, config.T, config.driving_series, config.target_cols
-            )
-            X_T = X_T.transpose((0, 2, 1))
-            X_Ts.append(X_T)
-            y_Ts.append(np.squeeze(y_T))
-        X_T = np.vstack(X_Ts)
-        y_T = np.vstack(y_Ts)
+    X_T, y_T = get_np_dataset(config)
     train_size = int(len(X_T) * config.train_ratio)
     val_size = int(((1 - config.train_ratio) / 2) * len(X_T))
     test_size = val_size
