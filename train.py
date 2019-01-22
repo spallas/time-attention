@@ -130,8 +130,8 @@ def main(argv):
 
             if val_scores["RMSE"] < best_RMSE:
                 best_RMSE = val_scores["RMSE"]
-                copy_checkpoint(log_path / "model-{}".format(tf_global_step),
-                                log_path / "model.max.ckpt")
+                copy_checkpoint(log_path / f"model-{tf_global_step}",
+                                log_path / "model-max-ckpt")
 
             writer.add_summary(make_summary(val_scores), tf_global_step)
             writer.add_summary(make_summary({"min RMSE = ": best_RMSE}), tf_global_step)
