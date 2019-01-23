@@ -17,8 +17,6 @@ tf.set_random_seed(config.seed)
 np.random.seed(config.seed)
 
 X_t, y_t = get_np_dataset(config)
-print(y_t.shape)
-
 X = Input(shape=(config.n, config.T))
 past = Input(shape=(config.T,))
 past_r = Reshape((1, config.T))(past)
@@ -28,9 +26,10 @@ z = LSTM(1)(z)
 
 model = Model(inputs=[X, past], outputs=z)
 model.compile(loss='mse', optimizer='adam', metrics=['mae'])
-
 model.summary()
-y_tt = np.hstack([y_t[:, :-1], np.reshape(np.array([0] * y_t.shape[0]), (y_t.shape[0], 1))])
-print(y_tt.shape)
-model.fit(x=[X_t, y_tt], y=y_t[:, -1], epochs=100, batch_size=128)
 
+y_tt = y_t
+y_t = np.copy(y_t[:, -1])
+y_tt[:, -1] = 0
+
+model.fit(x=[X_t, y_tt], y=y_t, epochs=100, batch_size=128)
