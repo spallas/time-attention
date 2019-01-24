@@ -26,7 +26,6 @@ def window(
 def get_np_dataset(
     config: Config, cat_before_window: bool = False
 ) -> Tuple[np.ndarray, np.ndarray]:
-    config.n = len(config.driving_series)
     dfs = []
     for path in config.data_paths:
         dfs.append(pd.read_csv(path, sep=config.sep, usecols=config.usecols))

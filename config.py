@@ -3,6 +3,7 @@ from pathlib import Path
 
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
+from cached_property import cached_property
 
 
 @dataclass_json
@@ -96,9 +97,6 @@ class Config(object):
     data_paths: List[str]
     target_cols: List[str]
     drop_cols: Optional[List[str]] = field(default_factory=list)
-    n: Optional[
-        int
-    ] = 0  # Set at runtime by `data_loader.get_train_test_dataset`
     m: int = 64
     p: int = 64
     sep: str = ","
@@ -112,25 +110,29 @@ class Config(object):
     log_dir: str = "log/"
     train_ratio: float = 0.8
     report_frequency: int = 50
-    plot_frequency: int = 10
+    plot_frequency: int = 5
     seed: int = 42
     inp_att_enabled: bool = True
     temporal_att_enabled: bool = True
 
-    @property
+    @cached_property
     def log_path(self):
         return Path(self.log_dir)
 
-    @property
+    @cached_property
     def usecols(self):
         path = self.data_paths[0]
         with open(path) as f:
             header = f.readline().strip().split(self.sep)
         return [col for col in header if col not in self.drop_cols]
 
-    @property
+    @cached_property
     def driving_series(self):
         return [col for col in self.usecols if col not in self.target_cols]
+
+    @cached_property
+    def n(self):
+        return len(self.driving_series)
 
     @classmethod
     def from_file(cls, path):
@@ -146,6 +148,6 @@ class Config(object):
 
 # Test
 if __name__ == "__main__":
-    with open("conf/experiment2.json") as f:
+    with open("conf/SML2010.json") as f:
         c = Config.from_json(f.read())
     print(c.to_json())
