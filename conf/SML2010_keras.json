@@ -1,8 +1,8 @@
 {
     "batch_size": 32,
-    "m": 64,
-    "p": 64,
-    "num_epochs": 400,
+    "m": 128,
+    "p": 32,
+    "num_epochs": 300,
     "learning_rate": 0.001,
     "decay_rate": 0.98,
     "decay_frequency": 90,
