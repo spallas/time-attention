@@ -2,7 +2,7 @@ import numpy as np
 import math
 import tensorflow as tf
 from tensorflow.python.keras import Input, Model
-from tensorflow.python.keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping
 from tensorflow.python.keras.layers import LSTMCell, RNN, Dense
 from sklearn.metrics.regression import mean_squared_error, mean_absolute_error
 from config import Config
