@@ -24,16 +24,19 @@ config = Config.from_file(FLAGS.config)
 tf.set_random_seed(config.seed)
 np.random.seed(config.seed)
 
-layers = [64, 64]
+num_steps_ahead = 5
+n_encoder_layers = 2
+n_decoder_layers = 2
 
-num_steps_ahead = 1
+encoder_layers = [config.m] * n_encoder_layers
+decoder_layers = [config.p] * n_decoder_layers
 
 # Encoder
 
 # driving series with shape (T, n)
 encoder_inputs = Input(shape=(None, config.n))  # add endogenous serie
 
-encoder = RNN([LSTMCell(units) for units in layers], return_state=True)
+encoder = RNN([LSTMCell(units) for units in encoder_layers], return_state=True)
 
 encoder_out_and_states = encoder(encoder_inputs)
 encoder_states = encoder_out_and_states[1:]
@@ -41,7 +44,7 @@ encoder_states = encoder_out_and_states[1:]
 # Decoder
 decoder_inputs = Input(shape=(None, config.T - 1))
 decoder = RNN(
-    [LSTMCell(units) for units in layers],
+    [LSTMCell(units) for units in decoder_layers],
     return_state=True,
     return_sequences=True,
 )
@@ -61,7 +64,7 @@ model.compile(optimizer="adam", loss="mse")
 encoder_predict_model = Model(encoder_inputs, encoder_states)
 
 decoder_state_inputs = [
-    Input(shape=(units,)) for units in layers for i in range(2)
+    Input(shape=(units,)) for units in decoder_layers for i in range(2)
 ]
 
 decoder_out_and_states = decoder(
