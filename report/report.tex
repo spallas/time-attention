@@ -45,12 +45,14 @@
 % author name.
 
 \author{
-  Davide Spallaccini\thanks{\texttt{spallaccini.1642557@studenti.uniroma1.it}} \\
+  Davide Spallaccini\thanks{\texttt{spallaccini.1642557@studenti.uniroma1.it}} 
+\\
   Department of Computer, Control \\ and Management Engineering\\
   Sapienza University of Rome\\
   Rome, Italy \\
   \And
-  Beatrice Bevilacqua\thanks{\texttt{bevilacqua.1645689@studenti.uniroma1.it}} \\
+  Beatrice Bevilacqua\thanks{\texttt{bevilacqua.1645689@studenti.uniroma1.it}} 
+\\
   Department of Computer, Control \\ and Management Engineering\\
   Sapienza University of Rome\\
   Rome, Italy \\
@@ -95,33 +97,50 @@ TODO
 \section{Introduction and Related Work}
 \label{sec:intro}
 
-We will face the problem of time series prediction through Nonlinear autoregressive exogenous models (NARX) whose 
-purpose is to predict the current value of a time series based on it's collected knowledge coming from the history of
-the time series to predict and the current and past values of a set of exogenous time series. Exogenous time series 
-are data that may be correlated to the series under consideration so they are also called "driving series". Of course
-a good NARX algorithm should be able to choose which of the series are to be considered "driving" when predicting the
-current value. At the same time a good algorithm should be able to capture long-term temporal dependencies.
+We will face the problem of time series prediction through Nonlinear 
+autoregressive exogenous models (NARX) whose 
+purpose is to predict the current value of a time series based on it's 
+collected knowledge coming from the history of
+the time series to predict and the current and past values of a set of 
+exogenous time series. Exogenous time series 
+are data that may be correlated to the series under consideration so they are 
+also called "driving series". Of course
+a good NARX algorithm should be able to choose which of the series are to be 
+considered "driving" when predicting the
+current value. At the same time a good algorithm should be able to capture 
+long-term temporal dependencies.
 
-In this work we analyse a deep-learning-based model that tries to takle with these two issues through the use of 
-recurrent neural networks and a carefully combined system of attention mechanisms. We also compare the result with
-other possible approaches to the same problem using again recurrent networks and also perform an ablation study that 
-wasn't directly reported in the author's paper to validate the effectiveness of the approach proposed.
+In this work we analyse a deep-learning-based model that tries to takle with 
+these two issues through the use of 
+recurrent neural networks and a carefully combined system of attention 
+mechanisms. We also compare the result with
+other possible approaches to the same problem using again recurrent networks 
+and also perform an ablation study that 
+wasn't directly reported in the author's paper to validate the effectiveness of 
+the approach proposed.
 
-Models from the past, though effective for some real word applications, do not perform very well since they cannot 
-model nonlinear relationships and do not differentiate beween driving terms, or they model nonlinear relationships 
-but with a predefined nonlinear relationship which is not necessary the true underlying one.
+Models from the past, though effective for some real word applications, do not 
+perform very well since they cannot 
+model nonlinear relationships and do not differentiate beween driving terms, or 
+they model nonlinear relationships 
+but with a predefined nonlinear relationship which is not necessary the true 
+underlying one.
 
 \section{Dataset}
 \label{sec:retrieval}
 
-We used the same dataset as the authors in order to try to compare our results with the ones obtained by them. However
-since the paper doesn't mention anything about data normalisation, selection or other kinds of preprocessing we didn't 
-get their exact results. We still got results that we could use to compare the different approaches and validate the 
+We used the same dataset as the authors in order to try to compare our results 
+with the ones obtained by them. However
+since the paper doesn't mention anything about data normalisation, selection or 
+other kinds of preprocessing we didn't 
+get their exact results. We still got results that we could use to compare the 
+different approaches and validate the 
 effectiveness of the use of the dual-stage attention mechanism.
 
 The first dataset is SML 2010 ...
 
-The second one is the NASDAQ 100 Stock dataset which is characterised by a large number of driving series ...
+The second one is the NASDAQ 100 Stock dataset which is characterised by a 
+large number of driving series ...
 
 
 \section{Model}
@@ -129,78 +148,119 @@ The second one is the NASDAQ 100 Stock dataset which is characterised by a large
 
 \paragraph{Dual-stage attention model}
 
-The proposed model in our reference paper is composed of an input attention whose output is fed to an encoder RNN. The 
-result is the input to a temporal attention and the output of this second attention mechanism is composed with the 
-past history of the target time series to the decoder RNN. We notice that there is a fixed-size interval of time from
+The proposed model in our reference paper is composed of an input attention 
+whose output is fed to an encoder RNN. The 
+result is the input to a temporal attention and the output of this second 
+attention mechanism is composed with the 
+past history of the target time series to the decoder RNN. We notice that there 
+is a fixed-size interval of time from
 which we sample a fixed number of timesteps ($T$ henceforward).
 
-The input attention is trained to assign a weight to all the possible input driving series. In particular we have 
-that each driving series is represented as a vector of $T$ values, one for each timesteps. For each timestep $t$ the 
-input attention assigns a weight to each of the driving series values for that timestep (i.e. at the offset $t$ of the
+The input attention is trained to assign a weight to all the possible input 
+driving series. In particular we have 
+that each driving series is represented as a vector of $T$ values, one for each 
+timesteps. For each timestep $t$ the 
+input attention assigns a weight to each of the driving series values for that 
+timestep (i.e. at the offset $t$ of the
 driving series vector).
 
-The encoder RNN is implemented with a LSTM cell, this choice allows the model to capture long-term dependencies. 
-For each timestep we map the result of the first attention to the output $\mathbf{h}_t$ which is the hidden state of 
-the LSTM at timestep $t$. The operations involved in this mapping are the ones that take place in the update of a LSTM
+The encoder RNN is implemented with a LSTM cell, this choice allows the model 
+to capture long-term dependencies. 
+For each timestep we map the result of the first attention to the output 
+$\mathbf{h}_t$ which is the hidden state of 
+the LSTM at timestep $t$. The operations involved in this mapping are the ones 
+that take place in the update of a LSTM
 cell and can be summarised as follows:
 
 
 \begin{equation} \label{eq:lstm}
 \begin{split}
-\mathbf{f}_t &= \sigma (\mathbf{W}_f[\mathbf{h}_{t-1};\mathbf{x}_t] + \mathbf{b}_f) \\
-\mathbf{i}_t &= \sigma (\mathbf{W}_i[\mathbf{h}_{t-1};\mathbf{x}_t] + \mathbf{b}_i) \\
-\mathbf{o}_t &= \sigma (\mathbf{W}_o[\mathbf{h}_{t-1};\mathbf{x}_t] + \mathbf{b}_o) \\
+\mathbf{f}_t &= \sigma (\mathbf{W}_f[\mathbf{h}_{t-1};\mathbf{x}_t] + 
+\mathbf{b}_f) \\
+\mathbf{i}_t &= \sigma (\mathbf{W}_i[\mathbf{h}_{t-1};\mathbf{x}_t] + 
+\mathbf{b}_i) \\
+\mathbf{o}_t &= \sigma (\mathbf{W}_o[\mathbf{h}_{t-1};\mathbf{x}_t] + 
+\mathbf{b}_o) \\
 \mathbf{s}_t &= \mathbf{f}_t \odot \mathbf{s}_t + \mathbf{i}_t 
-				\odot \text{tanh}(\mathbf{W}_s[\mathbf{h}_{t-1};\mathbf{x}_t] + \mathbf{b}_s) \\
+				\odot 
+\text{tanh}(\mathbf{W}_s[\mathbf{h}_{t-1};\mathbf{x}_t] + \mathbf{b}_s) \\
 \mathbf{h}_t &= \mathbf{o}_t \odot \text{tanh}(\mathbf{s}_t)
 \end{split}
 \end{equation}
 
-Where $[\mathbf{h}_{t-1};\mathbf{x}_t] \in \mathbb{R}^{m + n}$ is a concatenation of the hidden state of the previous 
-timestep and the input of the current timestep; $\mathbf{W}_f,\mathbf{W}_i,\mathbf{W}_o,\mathbf{W}_s 
-\in \mathbb{R}^{m \times(m+n)}$, and $\mathbf{b}_f, \mathbf{b}_i, \mathbf{b}_o,\mathbf{b}_s \in \mathbb{R}^m$ are 
-parameters to learn; $\sigma$ and $\odot$ are a logistic sigmoid function and an element-wise multiplication,
+Where $[\mathbf{h}_{t-1};\mathbf{x}_t] \in \mathbb{R}^{m + n}$ is a 
+concatenation of the hidden state of the previous 
+timestep and the input of the current timestep; 
+$\mathbf{W}_f,\mathbf{W}_i,\mathbf{W}_o,\mathbf{W}_s 
+\in \mathbb{R}^{m \times(m+n)}$, and $\mathbf{b}_f, \mathbf{b}_i, 
+\mathbf{b}_o,\mathbf{b}_s \in \mathbb{R}^m$ are 
+parameters to learn; $\sigma$ and $\odot$ are a logistic sigmoid function and 
+an element-wise multiplication,
 respectively.
 
-The output of the encoder, that is the vectors $\mathbf{h}_t$ are taken as input to the temporal attention.
-The temporal attention assigns a weight, for each timestep, to each timestep. Doing so we allow the model to keep
-track of old information if it is useful to the prediction. This could not be easy since without attention all this 
-information would be packed only into the hidden state of the decoder cell of the previous timestep.
+The output of the encoder, that is the vectors $\mathbf{h}_t$ are taken as 
+input to the temporal attention.
+The temporal attention assigns a weight, for each timestep, to each timestep. 
+Doing so we allow the model to keep
+track of old information if it is useful to the prediction. This could not be 
+easy since without attention all this 
+information would be packed only into the hidden state of the decoder cell of 
+the previous timestep.
 
-The decoder takes as input a concatenation of weighted sum (different at each timestep) of the hidden states coming 
-from the encoder and the value of the target series at timestep $t$. Then, finally, the last hidden state of the decoder
-cells concatenated with the last weighted sum of the encoder states is fed to a dense layer that outputs the value 
+The decoder takes as input a concatenation of weighted sum (different at each 
+timestep) of the hidden states coming 
+from the encoder and the value of the target series at timestep $t$. Then, 
+finally, the last hidden state of the decoder
+cells concatenated with the last weighted sum of the encoder states is fed to a 
+dense layer that outputs the value 
 $y_T$ of the target series for the current timestep.
 
 \paragraph{Implementation details}
 
-We used Tensorflow as the target framework to implement the model just described. The reason for this choice is that we
-could easily translate the equations of the model directly into the code and define each step of the model without 
-trying to figure out the how to obtain the same results using the high level APIs of Keras. This was because the 
-Keras documentation about RNNs to implement this custom attention model was a bit foggy at the beginning so we decided
+We used Tensorflow as the target framework to implement the model just 
+described. The reason for this choice is that we
+could easily translate the equations of the model directly into the code and 
+define each step of the model without 
+trying to figure out the how to obtain the same results using the high level 
+APIs of Keras. This was because the 
+Keras documentation about RNNs to implement this custom attention model was a 
+bit foggy at the beginning so we decided
 to step back to Tensorflow. 
 
-For the encoder network we used the \texttt{LSTMCell} class from \texttt{tensorflow.python.ops.rnn\_cell\_impl}.
-We initially instantiated a zero state for the cell and the hidden states. Then for each timestep we defined the 
-Tensorflow computational graph feeding the \texttt{LSTMCell} with the output of the previous timestep combined with the
-output of the attention. During this process we collect the output hidden states of the cell for the various timesteps.
+For the encoder network we used the \texttt{LSTMCell} class from 
+\texttt{tensorflow.python.ops.rnn\_cell\_impl}.
+We initially instantiated a zero state for the cell and the hidden states. Then 
+for each timestep we defined the 
+Tensorflow computational graph feeding the \texttt{LSTMCell} with the output of 
+the previous timestep combined with the
+output of the attention. During this process we collect the output hidden 
+states of the cell for the various timesteps.
 After the proper reshaping this output will be the input of the decoder network.
 
-The decoder network implementation is very similar to the encoder also for the attention part, the key difference where 
-the dimensions since the temporal attention works on a different range of inputs. We initially defined weights and bias 
-variables for each operation of the attention mechanisms but we later made the code more concise by using the 
+The decoder network implementation is very similar to the encoder also for the 
+attention part, the key difference where 
+the dimensions since the temporal attention works on a different range of 
+inputs. We initially defined weights and bias 
+variables for each operation of the attention mechanisms but we later made the 
+code more concise by using the 
 \texttt{tensorflow.layers.dense()} API.
 
-In order to set the proper shapes in every part of the implementation of the original model we used a nice facility of 
-Tensorflow called Eager Execution that allowed us to see the actual shapes of variables at each step given a sample 
+In order to set the proper shapes in every part of the implementation of the 
+original model we used a nice facility of 
+Tensorflow called Eager Execution that allowed us to see the actual shapes of 
+variables at each step given a sample 
 input.
 
-To make the experimentation modular we also defined a data class that loads all the parameters and file paths from 
+To make the experimentation modular we also defined a data class that loads all 
+the parameters and file paths from 
 JSON configuration files.
 
-For the training procedure we use a standard back propagation algorithm since the model is fully differentiable and we 
-set the mean squared error as the objective function. We selected the Adam optimizer while for other parameters we 
-selected the best performing ones on the validation dataset as described in the following section.
+For the training procedure we use a standard back propagation algorithm since 
+the model is fully differentiable and we 
+set the mean squared error as the objective function. We selected the Adam 
+optimizer while for other parameters we 
+selected the best performing ones on the validation dataset as described in the 
+following section.
 
 \section{Experiments}
 
@@ -208,7 +268,22 @@ TODO
 
 \section{Ablation Study}
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{img/da-rnn.png} \\
+\caption{DA-RNN model}
+\label{fig:da-rnn}
+\end{figure}
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\linewidth]{img/ende-rnn.png} \\
+\caption{Encoder Decoder model}
+\label{fig:ende-rnn}
+\end{figure}
 TODO
+
 
 \section{Conclusion}
 
@@ -218,6 +293,8 @@ TODO
 
 \small
 
-[1] Yao Qin, Dongjin Song, Haifeng Chen, Wei Cheng, Guofei Jiang, Garrison W. Cottrell. A Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction. 2017.
+[1] Yao Qin, Dongjin Song, Haifeng Chen, Wei Cheng, Guofei Jiang, Garrison W. 
+Cottrell. A Dual-Stage Attention-Based Recurrent Neural Network for Time Series 
+Prediction. 2017.
 
 \end{document}
