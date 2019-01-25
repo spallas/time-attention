@@ -41,10 +41,12 @@ class Config(object):
         Number of driving series
 
     m:
-        The size of the hidden state of the encoder
+        The size of the hidden state of the encoder. In the case of encoder
+        decoder model this will be also the decoder's hidden size
 
     p:
-        The size of the hidden state of the decoder
+        The size of the hidden state of the decoder. Ignored in encoder
+        decoder model
 
     sep:
         The pattern separating columns in the csvs
