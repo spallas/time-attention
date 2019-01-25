@@ -108,3 +108,8 @@ venv.bak/
 data/
 log*
 *.h5
+*.aux
+*.log
+*.out
+*.gz
+.vscode/
