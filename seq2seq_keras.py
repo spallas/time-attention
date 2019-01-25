@@ -26,7 +26,7 @@ np.random.seed(config.seed)
 
 layers = [config.m] * 2
 
-num_steps_ahead = 1
+num_steps_ahead = 5
 
 # Encoder
 
@@ -76,12 +76,28 @@ decoder_predict_model = Model(
     [decoder_inputs] + decoder_state_inputs, [decoder_outs] + decoder_states
 )
 
+# Training and testing
+
 X_t, y_t = get_np_dataset(config)
 X_t = X_t.transpose((0, 2, 1))
 y_t = np.expand_dims(y_t, axis=2)
 
-target_y_t = np.expand_dims(np.copy(y_t[:, -1, :]), axis=2)
-decoder_input = y_t.transpose((0, 2, 1))[:, :, :-1]
+"""
+The dataset is a sequence of overlapping windows (stride 1) of
+length `config.T`.
+In this scenario the model can look the values of the driving series
+in the timesteps [1, `config.T` - `num_steps_ahead` + 1] and of the
+target serie in the timesteps [1, `config.T` - `num_steps_ahead`] (Note
+the absence of +1) in order to predict the target serie values in the
+timesteps [`config.T` - `num_steps_ahead`, `config.T`].
+"""
+
+# Last `num_steps_ahead` of window of size T are the target
+target_y_t = np.copy(y_t[:, -num_steps_ahead:, :])
+
+# We remove the values of the driving series as described above
+X_t = X_t[:, : config.T - num_steps_ahead + 1, :]
+decoder_input = y_t.transpose((0, 2, 1))[:, :, :-num_steps_ahead]
 
 test_size = 537
 train_target_y_t = target_y_t[:-test_size]
@@ -100,7 +116,7 @@ model.fit(
     batch_size=config.batch_size,
     callbacks=[
         EarlyStopping(
-            min_delta=0.01, patience=75, mode="min", restore_best_weights=True
+            min_delta=0.01, patience=150, mode="min", restore_best_weights=True
         )
     ],
 )
