@@ -16,7 +16,7 @@ def window(
     y = df[target_series].values
     X_T = []
     y_T = []
-    for i in range(len(X) - size):
+    for i in range(len(X) - size + 1):
         X_T.append(X[i : i + size])
         y_T.append(y[i : i + size])
 
