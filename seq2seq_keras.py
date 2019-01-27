@@ -24,9 +24,10 @@ config = Config.from_file(FLAGS.config)
 tf.set_random_seed(config.seed)
 np.random.seed(config.seed)
 
-layers = [config.m] * 2
-
 num_steps_ahead = 5
+n_layers = 2
+
+layers = [config.m] * n_layers
 
 # Encoder
 
@@ -39,7 +40,7 @@ encoder_out_and_states = encoder(encoder_inputs)
 encoder_states = encoder_out_and_states[1:]
 
 # Decoder
-decoder_inputs = Input(shape=(None, config.T - 1))
+decoder_inputs = Input(shape=(None, config.T - num_steps_ahead))
 decoder = RNN(
     [LSTMCell(units) for units in layers],
     return_state=True,
@@ -94,19 +95,21 @@ timesteps [`config.T` - `num_steps_ahead`, `config.T`].
 
 # Last `num_steps_ahead` of window of size T are the target
 target_y_t = np.copy(y_t[:, -num_steps_ahead:, :])
-
-# We remove the values of the driving series as described above
-X_t = X_t[:, : config.T - num_steps_ahead + 1, :]
+X_t = X_t[:, : -num_steps_ahead + 1, :]
 decoder_input = y_t.transpose((0, 2, 1))[:, :, :-num_steps_ahead]
 
 test_size = 537
 train_target_y_t = target_y_t[:-test_size]
 train_X_t = X_t[:-test_size]
-train_decoder_input = decoder_input[:-test_size]
+train_decoder_input = np.tile(
+    decoder_input[:-test_size], (1, num_steps_ahead, 1)
+)
 
 test_target_y_t = target_y_t[-test_size:]
 test_X_t = X_t[-test_size:]
-test_decoder_input = decoder_input[-test_size:]
+test_decoder_input = np.tile(
+    decoder_input[-test_size:], (1, num_steps_ahead, 1)
+)
 
 model.fit(
     x=[train_X_t, train_decoder_input],
@@ -116,24 +119,23 @@ model.fit(
     batch_size=config.batch_size,
     callbacks=[
         EarlyStopping(
-            min_delta=0.01, patience=150, mode="min", restore_best_weights=True
+            min_delta=0.01, patience=75, mode="min", restore_best_weights=True
         )
     ],
 )
 
 y_pred = model.predict(x=[test_X_t, test_decoder_input])
 
+plot_target = test_target_y_t[::num_steps_ahead, :, :].reshape(-1)
+plot_pred = y_pred[::num_steps_ahead, :, :].reshape(-1)
+
 plt.figure()
-plt.plot(np.squeeze(test_target_y_t), label="true")
-plt.plot(np.squeeze(y_pred), label="predicted")
+plt.plot(plot_target, label="true")
+plt.plot(plot_pred, label="predicted")
 plt.legend(loc="upper left")
-plt.title("Validation data")
+plt.title("Test data")
 plt.ylabel("target serie")
 plt.xlabel("time steps")
 plt.show()
-print(
-    f"RMSE {math.sqrt(mean_squared_error(np.squeeze(test_target_y_t), np.squeeze(y_pred)))}"
-)
-print(
-    f"MAE {mean_absolute_error(np.squeeze(test_target_y_t), np.squeeze(y_pred))}"
-)
+print(f"RMSE {math.sqrt(mean_squared_error(plot_target, plot_pred))}")
+print(f"MAE {mean_absolute_error(plot_target, plot_pred)}")
