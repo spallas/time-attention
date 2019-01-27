@@ -78,7 +78,7 @@ decoder_predict_model = Model(
 
 # Training and testing
 
-X_t, y_t = get_np_dataset(config)
+X_t, y_t, x_scaler, y_scaler = get_np_dataset(config)
 X_t = X_t.transpose((0, 2, 1))
 y_t = np.expand_dims(y_t, axis=2)
 

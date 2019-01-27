@@ -62,7 +62,7 @@ def main(argv):
     tf.set_random_seed(config.seed)
     np.random.seed(config.seed)
 
-    train_set, val_set, test_set = get_datasets(config)
+    train_set, val_set, test_set, x_scaler, y_scaler = get_datasets(config, normalized=True)
     train_set = train_set.batch(config.batch_size, drop_remainder=True)
     val_set = val_set.batch(config.batch_size, drop_remainder=True)
     test_set = test_set.batch(config.batch_size, drop_remainder=True)

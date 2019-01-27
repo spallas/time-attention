@@ -136,6 +136,14 @@ class Config(object):
     def n(self):
         return len(self.driving_series)
 
+    @property
+    def test_ratio(self):
+        return (1 - self.train_ratio) / 2
+
+    @property
+    def val_ratio(self):
+        return self.test_ratio
+
     @classmethod
     def from_file(cls, path):
         with open(path) as f:

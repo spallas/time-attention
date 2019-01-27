@@ -1,5 +1,9 @@
+from math import sqrt
+
 import numpy as np
 import tensorflow as tf
+
+from sklearn.metrics.regression import mean_absolute_error, mean_squared_error
 from config import Config
 
 import model as _model
@@ -18,73 +22,47 @@ flags.DEFINE_string(
 )
 
 
-def get_np_array(session, model, next_element):
-    all_true = []
-    all_predicted = []
-    while True:
-        try:
-            x, y = session.run(next_element)
-            predictions = session.run(
-                model.predictions,
-                {model.driving_series: x, model.past_history: y},
-            )
-            true = np.reshape(y[:, -1], [-1]).tolist()
-            predicted = np.reshape(predictions, [-1]).tolist()
-            all_true += true
-            all_predicted += predicted
-
-        except tf.errors.OutOfRangeError:
-            break
-    return np.array(all_true), np.array(all_predicted)
+def compute_scores(true, pred):
+    mae = mean_absolute_error(true, pred)
+    rmse = sqrt(mean_squared_error(true, pred))
+    mape = np.abs((true - pred) / true).mean() * 100
+    return mae, rmse, mape
 
 
-def plot(
-    session, model, train_next_element, val_next_element, test_next_element
+def show_scores(
+    model, session, next_element, y_scaler, set_name, plot_offset=0
 ):
-    train_true, train_predicted = get_np_array(
-        session, model, train_next_element
-    )
-    val_true, val_predicted = get_np_array(session, model, val_next_element)
-    test_true, test_predicted = get_np_array(session, model, test_next_element)
+    true, pred = model.predict(session, next_element)
+    pred = y_scaler.inverse_transform(np.append(pred[0], pred[1:]))
+    true = y_scaler.inverse_transform(np.append(true[0], true[1:]))
+    mae, rmse, mape = compute_scores(true, pred)
 
-    train_size, val_size, test_size = (
-        len(train_true),
-        len(val_true),
-        len(test_true),
+    plt.plot(
+        range(plot_offset, plot_offset + len(true)),
+        true,
+        label=f"{set_name} true",
+    )
+    plt.plot(
+        range(plot_offset, plot_offset + len(pred)),
+        pred,
+        label=f"{set_name} pred",
     )
 
-    plt.figure()
-    plt.plot(range(train_size), train_true, label="train true")
-    plt.plot(range(train_size), train_predicted, label="train predicted")
-    plt.plot(
-        range(train_size, train_size + val_size), val_true, label="val true"
-    )
-    plt.plot(
-        range(train_size, train_size + val_size),
-        val_predicted,
-        label="val predicted",
-    )
-    plt.plot(
-        range(train_size + val_size, train_size + val_size + test_size),
-        test_true,
-        label="test true",
-    )
-    plt.plot(
-        range(train_size + val_size, train_size + val_size + test_size),
-        test_predicted,
-        label="test predicted",
-    )
-    plt.ylabel("target serie")
-    plt.xlabel("time steps")
-    plt.legend(loc="upper left")
-    plt.show()
+    print(f"============{set_name}=============")
+    print(f"MAE: {mae:.5f}")
+    print(f"RMSE: {rmse:.5f}")
+    print(f"MAPE: {mape:.5f}")
+
+    return plot_offset + len(true)
 
 
 def main(argv):
     # load hyper-parameters from configuration file
     config = Config.from_file(FLAGS.config)
 
-    train_set, val_set, test_set = get_datasets(config, shuffled=False)
+    train_set, val_set, test_set, x_scaler, y_scaler = get_datasets(
+        config, shuffled=False, normalized=True
+    )
     train_set = train_set.batch(config.batch_size, drop_remainder=True)
     val_set = val_set.batch(config.batch_size, drop_remainder=True)
     test_set = test_set.batch(config.batch_size, drop_remainder=True)
@@ -103,41 +81,41 @@ def main(argv):
         val_next_element = val_iterator.get_next()
         test_next_element = test_iterator.get_next()
 
-        # Restore from last evaluated epoch
+        # Restore the best model
         print("Restoring from: {}".format(config.log_path / "model-max-ckpt"))
         saver.restore(session, str(config.log_path / "model-max-ckpt"))
 
-        session.run(train_iterator.initializer)
-        train_scores = model.evaluate(session, train_next_element)
-        print("============Train=============")
-        print("RMSE: {:.5f}".format(train_scores["RMSE"]))
-        print("MAE: {:.5f}".format(train_scores["MAE"]))
-        print("MAPE: {:.5f}".format(train_scores["MAPE"]))
-
-        session.run(val_iterator.initializer)
-        val_scores = model.evaluate(session, val_next_element)
-        print("============Validation=============")
-        print("RMSE: {:.5f}".format(val_scores["RMSE"]))
-        print("MAE: {:.5f}".format(val_scores["MAE"]))
-        print("MAPE: {:.5f}".format(val_scores["MAPE"]))
-
-        session.run(test_iterator.initializer)
-        test_scores = model.evaluate(session, test_next_element)
-        print("============Test=============")
-        print("RMSE: {:.5f}".format(test_scores["RMSE"]))
-        print("MAE: {:.5f}".format(test_scores["MAE"]))
-        print("MAPE: {:.5f}".format(test_scores["MAPE"]))
+        plt.figure()
 
         session.run(train_iterator.initializer)
-        session.run(val_iterator.initializer)
-        session.run(test_iterator.initializer)
-        plot(
-            session,
-            model,
-            train_next_element,
-            val_next_element,
-            test_next_element,
+        offset = show_scores(
+            model, session, train_next_element, y_scaler, "Train"
         )
+
+        session.run(val_iterator.initializer)
+        offset = show_scores(
+            model,
+            session,
+            val_next_element,
+            y_scaler,
+            "Validation",
+            plot_offset=offset,
+        )
+
+        session.run(test_iterator.initializer)
+        offset = show_scores(
+            model,
+            session,
+            test_next_element,
+            y_scaler,
+            "Test",
+            plot_offset=offset,
+        )
+
+        plt.ylabel("target serie")
+        plt.xlabel("time steps")
+        plt.legend(loc="upper left")
+        plt.show()
 
 
 if __name__ == "__main__":

@@ -133,6 +133,21 @@ class TimeAttnModel:
         loss = tf.losses.mean_squared_error(y_T, past_history[:, - 1])
         return y_T, loss
 
+    def predict(self, session, next_element):
+        true = []
+        preds = []
+        while True:
+            try:
+                x, y = session.run(next_element)
+                true.append(y[:, -1])
+                preds.append(session.run(self.predictions,
+                                         feed_dict={self.driving_series: x, self.past_history: y})
+                )
+            except tf.errors.OutOfRangeError:
+                break
+        return true, preds
+
+
     def evaluate(self, session, next_element):
         RMSE_tot = 0.0
         MAE_tot = 0.0
