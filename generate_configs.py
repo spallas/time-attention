@@ -73,5 +73,5 @@ if __name__ == "__main__":
             T=T,
             m=m_p,
             p=m_p,
-            log_dir=str(Path(base_confs[dataset].log_dir) / new_c_name),
+            log_dir=str(Path(base_confs[dataset].log_dir)),
         ).to_file(get_filename(args.dest, new_c_name))
