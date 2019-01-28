@@ -39,7 +39,7 @@ def get_np_array(session, model, next_element):
 
 
 def plot(
-    session, model, train_next_element, val_next_element, test_next_element
+    session, model, train_next_element, val_next_element, test_next_element, name="tmp", show=True
 ):
     train_true, train_predicted = get_np_array(
         session, model, train_next_element
@@ -53,7 +53,7 @@ def plot(
         len(test_true),
     )
 
-    plt.figure()
+    plt.figure(figsize=(20, 5))
     plt.plot(range(train_size), train_true, label="train true")
     plt.plot(range(train_size), train_predicted, label="train predicted")
     plt.plot(
@@ -77,13 +77,14 @@ def plot(
     plt.ylabel("target serie")
     plt.xlabel("time steps")
     plt.legend(loc="upper left")
-    plt.show()
+    if show:
+        plt.show()
+    else:
+        plt.savefig(name, dpi=400)
+        plt.close()
 
 
-def main(argv):
-    # load hyper-parameters from configuration file
-    config = Config.from_file(FLAGS.config)
-
+def evaluate(config):
     train_set, val_set, test_set = get_datasets(config, shuffled=False)
     train_set = train_set.batch(config.batch_size, drop_remainder=True)
     val_set = val_set.batch(config.batch_size, drop_remainder=True)
@@ -138,6 +139,12 @@ def main(argv):
             val_next_element,
             test_next_element,
         )
+
+
+def main(argv):
+    # load hyper-parameters from configuration file
+    config = Config.from_file(FLAGS.config)
+    evaluate(config)
 
 
 if __name__ == "__main__":
