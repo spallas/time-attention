@@ -75,7 +75,7 @@ timesteps [`config.T` - `num_steps_ahead`, `config.T`].
 
 # Last `num_steps_ahead` of window of size T are the target
 target_y_t = np.copy(y_t[:, -num_steps_ahead:, :])
-X_t = X_t[:, : -num_steps_ahead + 1, :]
+X_t = X_t[:, :config.T - num_steps_ahead + 1, :]
 decoder_input = y_t.transpose((0, 2, 1))[:, :, :-num_steps_ahead]
 
 test_size = 537
