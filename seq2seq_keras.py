@@ -1,9 +1,9 @@
 import numpy as np
 import math
 import tensorflow as tf
-from tensorflow.python.keras import Input, Model
+from keras import Input, Model
 from keras.callbacks import EarlyStopping
-from tensorflow.python.keras.layers import LSTMCell, RNN, Dense
+from keras.layers import LSTMCell, RNN, Dense
 from sklearn.metrics.regression import mean_squared_error, mean_absolute_error
 from config import Config
 from data_loader import get_np_dataset
@@ -24,7 +24,7 @@ config = Config.from_file(FLAGS.config)
 tf.set_random_seed(config.seed)
 np.random.seed(config.seed)
 
-num_steps_ahead = 5
+num_steps_ahead = 1
 n_layers = 2
 
 layers = [config.m] * n_layers
