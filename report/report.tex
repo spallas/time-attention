@@ -137,11 +137,14 @@ get their exact results. We still got results that we could use to compare the
 different approaches and validate the
 effectiveness of the use of the dual-stage attention mechanism.
 
-The first dataset is SML 2010 ...
+The first dataset is SML 2010 is used to predict the temperature of indoor 
+environments. The data is collected from sensors of a system mounted in a 
+domestic house for a total time of 40 days. The data is sampled every minute and 
+was smoothed with 15 minutes mean. The target series we select is the room 
+temperature and we collect 16 driving series. Examples of driving series are: ...
 
 The second one is the NASDAQ 100 Stock dataset which is characterised by a
-large number of driving series ...
-
+larger number of driving series. This dataset is made public by the same authors of the original paper and is a collection of prices of 81 major corporations under NASDAQ 100 used as driving time series. The target series used is the value of the NASDAQ 100 index. As in the first dataset data is sampled every minute and covers 105 days from 26/07/2016 to 22/12/2016.
 
 \section{Model}
 \label{sec:model}
@@ -236,7 +239,16 @@ For the encoder of this model we stacked two LSTM layers and collected only the
 final output as the set of the two hidden states and cell states. These vectors
 represent the driving series.
 
-For the decoder part ...
+For the decoder part we set as initial state of the decoder LSTM the output of the
+encoder. We notice that the number of layers in the decoder is (and has to be) the
+same as the encoder, as well as the dimension of the hidden sizes. We then give as
+input to the decoder LSTM the vector containing the past history of the target 
+series and we feed this vector to the cell at each time-step. The output hidden
+state of the decoder is fed to a dense layer to obtain the final value for the 
+desired timestep. The number of timesteps for the decoder is determined at test
+time, that is we train the network to predict the value of the target series for
+the next $k$ timesteps, however at test time we can ask the model to predict the 
+next $k'$ timesteps with possibly $k' \ne k$.
 
 \begin{figure}[ht]
 \centering
@@ -306,7 +318,18 @@ training run for longer or later incurred in overfitting.
 
 \paragraph{Encoder-decoder implementation}
 
-...
+For the encoder-decoder model we took advantage of the Keras, since we became more
+familiar with its recurrent networks APIs. We instantiate a stacked 
+\texttt{LSTMCell} and gave it as argument to a \texttt{RNN} layer. Using the 
+functional API we applied this layer to the driving series' input and collected
+the final state. The decoder is similar and we set it to return both states and 
+sequences. We additionally set the initial state argument to the encoder output 
+states. Finally we apply a \texttt{Dense} layer to the output with linear 
+activation (since this is a regression problem).
+
+We finally defined a callback in the \texttt{fit()} function call to make the
+training stop if the value of the loss doesn't improve for a certain number of 
+consecutive steps (the level of patience was empirically adjusted).
 
 \section{Experiments}
 

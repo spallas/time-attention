@@ -57,26 +57,6 @@ decoder_outs = decoder_dense(decoder_outs)
 model = Model(inputs=[encoder_inputs, decoder_inputs], outputs=decoder_outs)
 model.compile(optimizer="adam", loss="mse")
 
-# Prediction model
-
-encoder_predict_model = Model(encoder_inputs, encoder_states)
-
-decoder_state_inputs = [
-    Input(shape=(units,)) for units in layers for i in range(2)
-]
-
-decoder_out_and_states = decoder(
-    decoder_inputs, initial_state=decoder_state_inputs
-)
-decoder_outs = decoder_out_and_states[0]
-decoder_states = decoder_out_and_states[1:]
-
-decoder_outs = decoder_dense(decoder_outs)
-
-decoder_predict_model = Model(
-    [decoder_inputs] + decoder_state_inputs, [decoder_outs] + decoder_states
-)
-
 # Training and testing
 
 X_t, y_t = get_np_dataset(config)
