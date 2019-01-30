@@ -90,7 +90,10 @@
 
 \begin{abstract}
 
-TODO
+Recently recurrent neural networks and their ability to capture time-dependent 
+features have been applied to time series forecasting showing important 
+improvements with respect to  previous methods. Simple RNN architectures though
+suffer vanishing/exploding gradient problems or cannot discriminate exogenous series in case these are given as input. In this work we analyse a solution based on LSTM networks and a multiple attention mechanism and compare this to simpler models including a multistep-ahead encoder-decoder architecture to show the effectiveness of the method proposed by [1].
 
 \end{abstract}
 
@@ -218,6 +221,18 @@ finally, the last hidden state of the decoder
 cells concatenated with the last weighted sum of the encoder states is fed to a
 dense layer that outputs the value
 $y_T$ of the target series for the current timestep.
+
+Now we want to provide some further details on how the attention weights are 
+calculated. Since the input and temporal attention only differ in the dimensions 
+but not in the operations performed we present here the calculations involved and 
+we will later specify which dimensions and inputs are required for the two types 
+of attention.
+
+\begin{equation} \label{eq:attention}
+\begin{split}
+
+\end{split}
+\end{equation}
 
 \begin{figure}[ht]
 \centering
