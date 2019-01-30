@@ -230,9 +230,29 @@ of attention.
 
 \begin{equation} \label{eq:attention}
 \begin{split}
-
+a_t^i &= \mathbf{v}^\top\text{tanh}(
+		 \mathbf{W}[\mathbf{h}_{t-1};\mathbf{s}_{t-1}] +\mathbf{U}\mathbf{x}^i) \\
+\gamma_t^i &= \frac{\text{exp}(a_t^i)}{\sum_{j=1}^k \text{exp}(a_t^j)}
 \end{split}
 \end{equation}
+
+In the case of input attention we have that $0 \le i \le n$ where $n$ is the 
+number of driving series, $\mathbf{h}, \mathbf{s}$ are the hidden and cell states 
+of the encoder, $\mathbf{x}_i$ is one driving series, 
+$\mathbf{v} \in \mathbb{R}^T, \mathbf{W} \in \mathbb{R}^{T\times 2m}$ and 
+$\mathbf{U} \in \mathbb{R}^{T\times T}$ (where $T$ are the timesteps while $m$ is 
+the hidden size of the encoder) are learnable parameters; the weights 
+$\gamma_t^i$ are used to weight each of the $n$ time series.
+
+In the case of input attention we have that $0 \le i \le T$ where $T$ is the 
+number of timesteps, $\mathbf{h}, \mathbf{s}$ are the hidden and cell states 
+of the decoder, $\mathbf{x}_i$ is a hidden state coming from the encoder, 
+$\mathbf{v} \in \mathbb{R}^m, \mathbf{W} \in \mathbb{R}^{m\times 2p}$ and 
+$\mathbf{U} \in \mathbb{R}^{m\times m}$, where $p$ is the size of the hidden 
+state of the decoder, are learnable parameters; the weights 
+$\gamma_t^i$ are used to weight each of the $T$ input hidden states and the 
+results are summed together for each $i$ to obtain a context vector that is 
+concatenated to the $y_{t-1}$ to get the input for the decoder network.
 
 \begin{figure}[ht]
 \centering
