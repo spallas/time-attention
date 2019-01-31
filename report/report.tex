@@ -397,7 +397,7 @@ with ... we have that ...
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.7\linewidth]{ende-rnn.png} \\
+\includegraphics[width=0.9\linewidth]{ende-rnn.png} \\
 \caption{Encoder Decoder model}
 \label{fig:ende-rnn}
 \end{figure}
@@ -423,6 +423,7 @@ desired timestep. The number of timesteps for the decoder is determined at test
 time, that is we train the network to predict the value of the target series for
 the next $k$ timesteps, however at test time we can ask the model to predict the 
 next $k'$ timesteps with possibly $k' \ne k$.
+
 
 \paragraph{Encoder-decoder implementation}
 
