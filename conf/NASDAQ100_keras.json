@@ -1,0 +1,17 @@
+{
+    "batch_size": 64,
+    "num_epochs": 2,
+    "m": 128,
+    "learning_rate": 0.001,
+    "decay_rate": 0.99,
+    "decay_frequency": 100,
+    "log_dir": "log",
+    "data_paths": [
+        "data/nasdaq100/small/nasdaq100_padding.csv"
+    ],
+    "target_cols": [
+        "NDX"
+    ],
+    "sep": ",",
+    "report_frequency": 30
+}

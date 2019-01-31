@@ -95,7 +95,11 @@
 Recently recurrent neural networks and their ability to capture time-dependent 
 features have been applied to time series forecasting showing important 
 improvements with respect to  previous methods. Simple RNN architectures though
-suffer vanishing/exploding gradient problems or cannot discriminate exogenous series in case these are given as input. In this work we analyse a solution based on LSTM networks and a multiple attention mechanism and compare this to simpler models including a multistep-ahead encoder-decoder architecture to show the effectiveness of the method proposed by [1].
+suffer vanishing/exploding gradient problems or cannot discriminate exogenous 
+series in case these are given as input. In this work we analyse a solution based 
+on LSTM networks and a multiple attention mechanism and compare this to simpler 
+models including a multistep-ahead encoder-decoder architecture to show the 
+effectiveness of the method proposed by [1].
 
 \end{abstract}
 
@@ -104,15 +108,20 @@ suffer vanishing/exploding gradient problems or cannot discriminate exogenous se
 
 Nonlinear autoregressive exogenous models (NARX) aim to predict the current
 value $y_t$ of a time serie $y$ based on its
-collected knowledge coming from the past $T$ values ($T$ also denoted as window size) of
-the time serie ($y_{t-T}, y_{t - T + 1}, ..., y_{t-1}$) and the current and past values of $n$
-exogenous time series  ($\mathbf{x}_{t-T}, \mathbf{x}_{t - T + 1}, ..., \mathbf{x}_{t}$)
-, $\mathbf{x}_t \in \mathbb{R}^n$ where $\mathbf{x}_t = (x_t^1, x_t^2, ..., x_t^n)^\top$
+collected knowledge coming from the past $T$ values ($T$ also denoted as window 
+size) of
+the time series ($y_{t-T}, y_{t - T + 1}, ..., y_{t-1}$) and the current and past 
+values of $n$
+exogenous time series  ($\mathbf{x}_{t-T}, \mathbf{x}_{t - T + 1}, ..., 
+\mathbf{x}_{t}$)
+, $\mathbf{x}_t \in \mathbb{R}^n$ where $\mathbf{x}_t = (x_t^1, x_t^2, ..., 
+x_t^n)^\top$
 are the values of each driving serie at timestep $t$ and $\mathbf{x}^k =
 (x_1^k, x_2^k, ..., x_T^k)$ are the values of the $k$-th time serie in a given
 window. Exogenous time series
 are data that may be correlated to the series under consideration so they are
-also called "driving series". A good NARX algorithm should be able to choose which of the series are to be
+also called "driving series". A good NARX algorithm should be able to choose 
+which of the series are to be
 considered "driving" when predicting the
 current value. At the same time a good algorithm should be able to capture
 long-term temporal dependencies.
@@ -139,7 +148,7 @@ underlying one.
 We used the same datasets as the authors' in order to try to compare our results
 with the ones reported.
 
-The first dataset is SML 2010 of which task is to predict the temperature of indoor 
+The first dataset is SML 2010; its task is to predict the temperature of indoor 
 environments. The data is collected from sensors of a system mounted in a 
 domestic house for a total time of 40 days. The data is sampled every minute and 
 was smoothed with 15 minutes mean. The target series we select is the room 
@@ -427,7 +436,7 @@ next $k'$ timesteps with possibly $k' \ne k$.
 
 \paragraph{Encoder-decoder implementation}
 
-For the encoder-decoder model we took advantage of the Keras, since we became more
+For the encoder-decoder model we took advantage of Keras, since we became more
 familiar with its recurrent networks APIs. We instantiate a stacked 
 \texttt{LSTMCell} and gave it as argument to a \texttt{RNN} layer. Using the 
 functional API we applied this layer to the driving series' input and collected
