@@ -463,14 +463,15 @@ some small variations.
 
 \subsection{Ablation Study}
 
-
 \begin{figure}[h]
   \centering
   \subfloat[SML 2010 test set]{{
     \includegraphics[width=0.4\linewidth]{ablation-sml.png}
+    \label{fig:ablation-sml}
   }}
   \subfloat[NASDAQ 100 test set]{{
     \includegraphics[width=0.4\linewidth]{ablation-nasdaq.png}
+    \label{fig:ablation-nasdaq}
   }}
   \caption{Comparison of the performances by switching off the attention
   mechanisms. The red line shows the RMSE score of the model with both
@@ -478,20 +479,34 @@ some small variations.
   with both the input and temporal attentions disabled. In orange the score
   with only the temporal attention disabled and in green the score with
   only the input attention disabled. Similar plots for the other metrics.}
+  \label{fig:ablation}
 \end{figure}
 
 To validate the usefulness and correctness of the dual-stage attention approach
-we
-perform an ablation study of the model and report the values of the resulting
-three systems comparing them with the model. We notice that we here include the
-temporal-attention-only model together with the input-attention-only model that
-was not evaluated in our original reference paper.
+we perform an ablation study of the model and report the values of the
+resulting three systems comparing them against the model with both attention
+mechanisms active and hyperparameters said above. We notice that here we
+include the temporal-attention-only model together with the
+input-attention-only model that was not evaluated in our original reference
+paper.
 
-From the tables and pictures ...
-we can see the effectiveness of the dual attention model with respect to the
-original simple encoder-decoder architecture. In particular you can notice on
-the graph reporting both the true and predicted curves that in correspondence
-with ... we have that ...
+In Figure \ref{fig:ablation} the comparison between the model without any
+attention mechanism, without the temporal attention and without the input
+attention respectively is shown against the line representing the dual
+attention model of the authors'.
+
+Figure \ref{fig:ablation-sml} shows that the temporal attention is
+ineffective for this task (green bar and red line representing
+models with temporal attention enabled higher than models
+where the temporal attention is disabled). This is probably due to the
+sinusoidal shape of the target series of which timesteps have equal
+importance.
+
+Figure \ref{fig:ablation-nasdaq} highlights the effectiveness of the
+dual-stage attention mechanism. In the NASDAQ100 dataset the models
+without one of the attention mechanisms are not able to produce
+remarkable results due to both the large number of driving series and
+the strong variations of the series over the timesteps.
 
 \section{Multi-step-ahead encoder-decoder model}
 
