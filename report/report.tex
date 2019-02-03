@@ -1,6 +1,5 @@
 \documentclass{article}
 
-
 % if you need to pass options to natbib, use, e.g.:
 % \PassOptionsToPackage{numbers, compress}{natbib}
 % before loading nips_2018
@@ -32,7 +31,6 @@
 \graphicspath{ {img/} }
 
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
-
 
 \title{Recurrent Neural Networks for Time Series Prediction}
 
@@ -92,10 +90,10 @@
 
 \begin{abstract}
 
-Recently recurrent neural networks and their ability to capture time-dependent 
+Recently recurrent neural networks due to their ability to capture time-dependent 
 features have been applied to time series forecasting showing important 
-improvements with respect to  previous methods. Simple RNN architectures though
-suffer vanishing/exploding gradient problems or cannot discriminate exogenous series in case these are given as input. In this work we analyse a solution based on LSTM networks and a multiple attention mechanism and compare this to simpler models including a multistep-ahead encoder-decoder architecture to show the effectiveness of the method proposed by [1].
+improvements with respect to previous methods. Simple RNN architectures though
+suffer from vanishing/exploding gradient problems and cannot discriminate exogenous series in case these are given as input. In this work we analyse a solution based on LSTM networks and a multiple attentions mechanism and compare this to simpler models including a multistep-ahead encoder-decoder architecture to show the effectiveness of the method proposed by \cite{da-rnn}.
 
 \end{abstract}
 
@@ -103,35 +101,33 @@ suffer vanishing/exploding gradient problems or cannot discriminate exogenous se
 \label{sec:intro}
 
 Nonlinear autoregressive exogenous models (NARX) aim to predict the current
-value $y_t$ of a time serie $y$ based on its
-collected knowledge coming from the past $T$ values ($T$ also denoted as window size) of
-the time serie ($y_{t-T}, y_{t - T + 1}, ..., y_{t-1}$) and the current and past values of $n$
-exogenous time series  ($\mathbf{x}_{t-T}, \mathbf{x}_{t - T + 1}, ..., \mathbf{x}_{t}$)
+value $y_T$ of a time series $y$ based on its
+collected knowledge coming from the past $T -1$ values ($T$ also denoted as window size) of
+the time series ($y_{1}, y_{2}, ..., y_{T-1}$) and the current and past $T$ values of $n$
+exogenous time series ($\mathbf{x}_{1}, \mathbf{x}_{2}, ..., \mathbf{x}_{T}$)
 , $\mathbf{x}_t \in \mathbb{R}^n$ where $\mathbf{x}_t = (x_t^1, x_t^2, ..., x_t^n)^\top$
-are the values of each driving serie at timestep $t$ and $\mathbf{x}^k =
-(x_1^k, x_2^k, ..., x_T^k)$ are the values of the $k$-th time serie in a given
+are the values of each driving series at timestep $t$ and $\mathbf{x}^k =
+(x_1^k, x_2^k, ..., x_T^k)$ are the values of the $k$-th time series in a given
 window. Exogenous time series
-are data that may be correlated to the series under consideration so they are
-also called "driving series". A good NARX algorithm should be able to choose which of the series are to be
-considered "driving" when predicting the
-current value. At the same time a good algorithm should be able to capture
-long-term temporal dependencies.
+are data that may be correlated to the series under consideration, so they are
+also called \textit{driving series}. A good NARX algorithm should be able to choose which of the series are to be
+considered driving when predicting the current value of the target series.
+At the same time, a good algorithm should be able to capture long-term temporal
+dependencies.
 
 In this work we analyse a deep-learning-based model that tries to tackle
 these two issues through the usage of
 recurrent neural networks and a carefully combined system of attention
 mechanisms. We perform an ablation study that wasn't directly reported in the
-author's paper to validate the effectiveness of the approach proposed and
+authors' paper to validate the effectiveness of the approach proposed and
 compare the result with other possible approaches to the same problem using
 again recurrent networks. 
 Classic statistical models, though effective for some real word applications,
 do not perform very well since they cannot
-model nonlinear relationships and do not differentiate beween driving terms, or
+model nonlinear relationships and do not differentiate between driving terms, or
 they model nonlinear relationships
 but with a predefined nonlinear relationship which is not necessarily the true
 underlying one.
-
-
 
 \section{Dataset}
 \label{sec:retrieval}
@@ -144,18 +140,21 @@ environments. The data is collected from sensors of a system mounted in a
 domestic house for a total time of 40 days. The data is sampled every minute and 
 was smoothed with 15 minutes mean. The target series we select is the room 
 temperature and we collect 17 driving series by filtering out series which
-are constant.
+are constant. We use $80$ percent of the dataset for training and we 
+split evenly the remaining between validation and test.
 
-The second one is the NASDAQ 100 Stock dataset which is characterised by a
+The second dataset is the NASDAQ 100 Stock dataset which is characterised by a
 larger number of driving series and stronger variations. This dataset is
 made public by the same
 authors of the original paper and is a collection of prices of 81 major
-corporations under NASDAQ 100 used as driving time series. The target serie
-used is the value of the NASDAQ 100 index. As in the first dataset data is
-sampled every minute and covers 105 days from 26/07/2016 to 22/12/2016.
+corporations under NASDAQ 100 used as driving time series. The target series
+used is the value of the NASDAQ 100 index. The frequency of the data is 
+minute-by-minute and covers 105 days from July 26, 2016 to December 22, 2016. 
+We use $80$ percent of the dataset for training, and the remaining is split into 
+validation and test.
 
 Both datasets are transformed into overlapping windows of a given size
-$T$ with stride 1.
+$T$ (with the last value of the target series being the one we aim to predict), with stride 1.
 
 \begin{figure}[h]
 \centering
@@ -169,23 +168,23 @@ $T$ with stride 1.
 \section{Dual-stage attention model}
 \label{sec:da-rnn}
 
-The proposed model of the reference paper introduces two attention
-mechanisms in a LSTM-based encoder and decoder architecture. The first
-attention, \textit{Input Attention}, is trained to independently weight
+The proposed model of the reference paper, which is illustrated in Figure \ref{fig:da-rnn},
+introduces two attention mechanisms in a LSTM-based encoder and decoder architecture.
+The first attention, \textit{Input Attention}, is trained to independently weight
 the driving series at each timestep producing
 \begin{align*}
-A_{in}((\mathbf{x}_1, \mathbf{x}_2, ..., \mathbf{x}_T)) =
+(\tilde{\mathbf{x}}_1, \tilde{\mathbf{x}}_2, ..., \tilde{\mathbf{x}}_T) = A_{in}((\mathbf{x}_1, \mathbf{x}_2, ..., \mathbf{x}_T)) =
 (\boldsymbol{\alpha}_1 \odot \mathbf{x}_1, \boldsymbol{\alpha}_2 \odot \mathbf{x}_2, ..., \boldsymbol{\alpha}_T \odot \mathbf{x}_T)
 \end{align*}
 with $\boldsymbol{\alpha}_i \in \mathbb{R}^n$ and $\norm{\boldsymbol{\alpha}_i}_1 = 1$.
 This helps in highlighting which series are useful for the prediction of
-the target serie.
+the target series.
 
 The weighted driving series are than passed to a one layer LSTM encoder of
 which hidden states (cell state and hidden state) are used in the Input Attention
 mechanism.
 
-For each timestep the encoder maps the input $\tilde{\mathbf{x}}_t$ to a vector
+For each timestep the encoder maps the "attentioned" input $\tilde{\mathbf{x}}_t$ to a vector
 $\mathbf{h}_t \in \mathbb{R}^m$ which is the hidden state of
 the LSTM at timestep $t$. The operations involved in this mapping are the ones
 that take place in the update of a LSTM cell and can be summarised as follows:
@@ -220,15 +219,17 @@ The second attention mechanism introduced, \textit{Temporal Attention}, adaptive
 selects relevant encoder hidden states across the timesteps of the window
 producing
 \begin{align*}
-A_{temp}((\mathbf{h}_1, \mathbf{h}_2, ..., \mathbf{h}_T)) =
+(\mathbf{c}_1, \mathbf{c}_2, ..., \mathbf{c}_T) = A_{temp}((\mathbf{h}_1, \mathbf{h}_2, ..., \mathbf{h}_T)) =
 \left(\sum_{i=1}^T \beta_1^i \mathbf{h}_i, \sum_{i=1}^T \beta_2^i\mathbf{h}_i, ..., \sum_{i=1}^T \beta_T^i\mathbf{h}_i \right)
 \end{align*}
 where $\beta^i_t$ represents the importance of the $i$-th encoder
 hidden state for the prediction.
 
-The $t$-th "attentioned" encoder hidden state is then concatenated with
+The $t$-th "attentioned" encoder hidden state $\mathbf{c}_t$ is then concatenated with
 $y_t$, given in input to a dense layer of which output is then fed in input
-to the decoder.
+to the decoder. When $t = T$ instead, the "attentioned" encoder hidden state is 
+concatenated to the hidden state of the decoder and passed to two dense layers
+to obtain the predicted value.
 
 
 For the Input Attention, the following operations are taken to
@@ -240,8 +241,8 @@ e_t^k &= \mathbf{v}_e^\top\text{tanh}(
 \alpha_t^k &= \frac{\text{exp}(e_t^k)}{\sum_{i=1}^n \text{exp}(e_t^i)}, 
 \end{align*}
 
-where $\mathbf{h}, \mathbf{s}$ are the hidden and cell states 
-of the encoder, $\mathbf{x}^k$ is one driving serie, 
+where $\mathbf{h}_{t-1}, \mathbf{s}_{t-1}$ are the hidden and cell states 
+of the encoder, $\mathbf{x}^k$ is one driving series, 
 $\mathbf{v}_e \in \mathbb{R}^T, \mathbf{W}_e \in \mathbb{R}^{T\times 2m}$ and 
 $\mathbf{U}_e \in \mathbb{R}^{T\times T}$ (with $m$ the hidden size of the encoder)
 are learnable parameters.
@@ -255,122 +256,163 @@ l_t^i &= \mathbf{v}_d^\top\text{tanh}(
 \beta_t^i &= \frac{\text{exp}(l_t^i)}{\sum_{i=1}^n \text{exp}(e_t^i)}, 
 \end{align*}
 
-where $\mathbf{d}, \mathbf{s}' \in \mathbb{R}^p$ are the hidden and cell states 
+where $\mathbf{d}_{t-1}, \mathbf{s}'_{t-1} \in \mathbb{R}^p$ are the hidden and cell states 
 of the decoder, $\mathbf{h}_i$ is the $i$-th hidden state of the encoder, 
 $\mathbf{v}_d \in \mathbb{R}^m, \mathbf{W}_d \in \mathbb{R}^{m \times 2p}$ and 
 $\mathbf{U}_d \in \mathbb{R}^{m\times m}$ (with $p$ the hidden size of the decoder)
 are learnable parameters.
 
-
-
-
-
-
 \subsection{Implementation details}
 
-We used Tensorflow as the target framework to implement the model just
-described. The reason for this choice is that we
+We used Tensorflow $1.12$ as the target framework to implement the model just
+described. The reason behind this choice is that we
 could easily translate the equations of the model directly into the code and
-define each step of the model without
-trying to figure out the how to obtain the same results using the high level
-APIs of Keras. This was because the
-Keras documentation about RNNs to implement this custom attention model was a
-bit foggy at the beginning so we decided
-to step back to Tensorflow. 
+define each step of the model pragmatically.
+
 
 For the encoder network we used the \texttt{LSTMCell} class from
 \texttt{tensorflow.python.ops.rnn\_cell\_impl}.
 We initially instantiated a zero state for the cell and the hidden states. Then
-for each timestep we defined the
-Tensorflow computational graph feeding the \texttt{LSTMCell} with the output of
-the previous timestep combined with the
-output of the attention. During this process we collect the output hidden
-states of the cell for the various timesteps.
-After the proper reshaping this output will be the input of the decoder network.
+for each timestep we defined the Tensorflow computational graph nodes, in particular
+the nodes for the Input Attention implementation and the \texttt{LSTMCell}, which takes
+as input the hidden state of the previous timestep and the
+output of the Input Attention. During this process we collect the output hidden
+states of the cell for the various timesteps, that is finally reshaped 
+to be the input of the Temporal Attention.
 
-The decoder network implementation is very similar to the encoder also for the
-attention part, the key difference were
-the dimensions since the temporal attention works on a different range of
-inputs. We initially defined weights and bias
-variables for each operation of the attention mechanisms but we later made the
-code more concise by using the
-\texttt{tensorflow.layers.dense()} API.
+For the decoder network implementation we instantiated a zero state for the cell and 
+the hidden state and we defined the nodes for the Temporal attention. The 
+target series value at time $t$ is concatenated with the output of the temporal attention
+at time $t$ and passed to a dense layer. The newly computed vector is used for the 
+update of the decoder hidden state in the \texttt{LSTMCell}. For $y_T$, which 
+is what we aim to predict, the "attentioned" encoder hidden state at time $T$
+is concatenated to the last hidden state of the decoder and fed to two dense layers.
 
-In order to set the proper shapes in every part of the implementation of the
-original model we used a nice facility of
-Tensorflow called Eager Execution that allowed us to see the actual shapes of
-variables at each step given a sample
-input.
+To make the experimentation modular we defined a data class that loads all
+the parameters and file paths from JSON configuration files.
 
-To make the experimentation modular we also defined a data class that loads all
-the parameters and file paths from
-JSON configuration files.
+Initially, in order to ensure the correctness of the formulas being implemented 
+we used the Eager Execution model offered by Tensorflow which allows to easily
+debug and quickly iterate over the core of the model.
 
 We used Tensorboard to graphically visualize the value of the loss across 
 the training steps and the values of the evaluation metrics on the validation set 
-at every epoch of training. Finally we also exploited the checkpointing facilities
+at every epoch of training. 
+
+Finally we exploited the checkpointing facilities
 offered by the framework to save two main set of values: the data needed to 
 restart the training on a successive run of the training and the weights of the 
 model that achieved the best performance in all the evaluation sessions. The final
 tests indeed are done by loading the weights of the best model even if the 
-training run for longer or later incurred in overfitting.
+training ran for longer or later incurred in overfitting.
 
 
-\subsection{Hyper parameter tuning}
 
+\newpage
 
 \begin{figure}[h]
   \centering
-  \subfloat[SML2010 validation set]{{
+  \subfloat[SML 2010 validation set]{{
     \includegraphics[width=0.6\linewidth]{hype-sml.png}
   }} \\
-  \subfloat[NASDAQ100 validation set]{{
+  \subfloat[NASDAQ 100 validation set]{{
     \includegraphics[width=0.6\linewidth]{hype-nasdaq.png}
   }}
   \caption{RMSE score across the dataset for different
-   window lengths $T$ and encoder/decoder hidden state size}
+   window lengths $T$ and encoder/decoder hidden state size,
+   $m$ and $p$ respectively}
   \label{fig:hype}
 \end{figure}
 
+\subsection{Hyper parameter tuning}
 
 We validated our implementation using the same set of metrics as the original 
-authors and we performed some hyper-parameter tuning running the training with
-different configuration files. All the models were trained for 150 epochs using
-the Adam optimizer with starting learning rate 0.001 and exponential decay with
-objective function the Mean Squared Error. The
-models trained on the SML2010 dataset were trained with batch size 32 while
-the ones trained on NASDAQ100 with batch size 128. In both cases a grid search
+authors (RMSE, MAE, MAPE) and we performed some hyper-parameter tuning running the training with
+different configuration files.
+
+All the models were trained for 150 epochs using
+two Adam optimisers one for the encoder and one for the decoder, which sped up
+the training. We used a starting learning rate of 0.001 and exponential decay with
+objective function the Mean Squared Error. We applied clipping of the gradients 
+to prevent exploding gradients messing up the parameters during training.
+The models trained on the SML 2010 dataset were trained with batch size 32 while
+the ones trained on NASDAQ 100 with batch size 128. In both cases a grid search
 is performed over $T \in \{3, 5, 10, 15, 25\}$ and $m = p \in \{16, 32, 64, 128, 256\}$.
-The model performing best on the validation set is then used for further analysis.
+The model with the best performance on the validation set is then used for further analysis.
 In Figure \ref{fig:hype} the RMSE scores as the parameters vary are shown. The
 other scores (MAE, MAPE) follow a similar trend. As can be noticed, in general better
 scores are achieved for small window size and as it grows a drop in performance arises
-which is typical of encoder decoder networks.
+which is typical of encoder decoder networks \cite{cho-et-al}.
 
-The metrics are the root mean squared error (RMSE), the mean absolute error (MAE) 
-and finally the mean absolute percentage error (MAPE) which is scale-independent.
+For SML 2010 dataset, given the simplicity of the series to predict, the RMSE is small even for
+small values of the window length. However, since a small window length cannot capture 
+long-term dependencies and will also weaken the usefulness of the Temporal Attention,
+we decided to take for test $T = 15$ and $m=p=32$.
 
+For NASDAQ 100 dataset, $T=3$ and $m=p=16$ or $m=p=32$ have high RMSE, since a small window
+size combined with small hidden state sizes does not result effective enough for the 
+prediction. For evaluation we take the ones that achieves the best performance,
+$T=15$ and $m=p=256$.
 
-After we have obtained a good hyper-parameters set for the various models we 
-compares their performance on our reference datasets. We obtained the following 
-results:
+After we have obtained a good hyper-parameters setting for the various models we 
+compare their performance on our reference datasets. 
+In Table \ref{results} we show the scores achieved. As can be seen, the results slightly differ
+from the ones of the authors which can be either because of the difference in the number of epochs
+or because of a data normalisation which we did not perform.
+\begin{center}
+\begin{table}
+\begin{tabular}{r|c|c|c|c|c|c|c|c|c|}
+\multicolumn{1}{r}{}
+  & \multicolumn{3}{c}{\textbf{Train}}
+  & \multicolumn{3}{c}{\textbf{Validation}}
+  & \multicolumn{3}{c}{\textbf{Test}} \\
+  \cline{2-10}
+  & \multicolumn{1}{c}{RMSE}
+  & \multicolumn{1}{c}{MAE}
+  & \multicolumn{1}{c|}{MAPE} 
+  & \multicolumn{1}{c}{RMSE}
+  & \multicolumn{1}{c}{MAE}
+  & \multicolumn{1}{c|}{MAPE}
+  & \multicolumn{1}{c}{RMSE}
+  & \multicolumn{1}{c}{MAE}
+  & \multicolumn{1}{c|}{MAPE}\\
+\cline{2-10}
+NASDAQ100 & 1.7095 & 0.9537 & 0.01991 & 1.4689 & 0.9550 & 0.0198 & 1.5810 & 1.0477 & 0.0212 \\
+\cline{2-10}
+SML2010 & 0.0644 & 0.0434 & 0.2279 & 0.0763 & 0.0601 & 0.2561 & 0.0863 & 0.0666 & 0.3248 \\
+\cline{2-10}
+\end{tabular}
+\vspace{1em}
+\caption{Results over SML2010 and NASDAQ100}
+\label{results}
+\end{table}
+\end{center}
 
-...
+\begin{figure}
+  \centering
+  \subfloat[SML 2010]{{
+    \includegraphics[width=\linewidth]{smlres.png}
+  }} \\
+  \subfloat[NASDAQ 100]{{
+    \includegraphics[width=\linewidth]{nasdaqres.png}
+  }}
+  \caption{Predicted time series and true time series plotted for portions of the time steps}
+  \label{fig:res}
+\end{figure}
 
-In the following section we will also compare both qualitatively, i.e. visually 
-analysing the predictions, and quantitatively with the metrics values the results 
-of the DA-RNN model stripped of its basic components.
-
+The results of the predictions are displayed in Figure \ref{fig:res}. As can be noticed,
+the model produces a prediction close to the last seen value of the target series, with
+some small variations.
 
 \subsection{Ablation Study}
 
 
 \begin{figure}[h]
   \centering
-  \subfloat[SML2010 test set]{{
+  \subfloat[SML 2010 test set]{{
     \includegraphics[width=0.4\linewidth]{ablation-sml.png}
   }}
-  \subfloat[NASDAQ100 test set]{{
+  \subfloat[NASDAQ 100 test set]{{
     \includegraphics[width=0.4\linewidth]{ablation-nasdaq.png}
   }}
   \caption{Comparison of the performances by switching off the attention
@@ -383,7 +425,7 @@ of the DA-RNN model stripped of its basic components.
 
 To validate the usefulness and correctness of the dual-stage attention approach we
 perform an ablation study of the model and report the values of the resulting 
-three systems in the following tables. We notice that we here include the 
+three systems comparing them with the model. We notice that we here include the 
 temporal-attention-only model together with the input-attention-only model that
 was not evaluated in our original reference paper.
 
@@ -403,8 +445,13 @@ with ... we have that ...
 \end{figure}
 
 
-In this paragraph we introduce a model for predicting more than a single value in 
-the future using the same inputs of the single-step-ahead model. 
+In this paragraph we introduce a model for predicting more than a single value,
+say $k$ values, using the same inputs of the single-step-ahead model. 
+In this scenario, the model can look the values of the driving series
+in the timesteps $[1, T - k + 1]$ and of the
+target series in the timesteps $[1, T - k]$ in order to predict the target
+series values in the timesteps $[T - k, T]$.
+
 For the architecture we took inspiration from the original authors' comparison of
 existing models and we extended the encoder-decoder model to predict the values
 of multiple timesteps ahead for the target series.
@@ -425,10 +472,9 @@ the next $k$ timesteps, however at test time we can ask the model to predict the
 next $k'$ timesteps with possibly $k' \ne k$.
 
 
-\paragraph{Encoder-decoder implementation}
+\subsection{Implementation details}
 
-For the encoder-decoder model we took advantage of the Keras, since we became more
-familiar with its recurrent networks APIs. We instantiate a stacked 
+For the encoder-decoder model we took advantage of the Keras. We instantiate a stacked 
 \texttt{LSTMCell} and gave it as argument to a \texttt{RNN} layer. Using the 
 functional API we applied this layer to the driving series' input and collected
 the final state. The decoder is similar and we set it to return both states and 
@@ -440,16 +486,22 @@ We finally defined a callback in the \texttt{fit()} function call to make the
 training stop if the value of the loss doesn't improve for a certain number of 
 consecutive steps (the level of patience was empirically adjusted).
 
+\subsection{Results}
+TODO
+
 \section{Conclusion}
 
 TODO
 
-\section*{References}
+\newpage
+\begin{thebibliography}{9}
+\bibitem{da-rnn}
+Qin, Yao, et al. “A Dual-Stage Attention-Based Recurrent Neural Network for Time Series Prediction.” Proceedings of the Twenty-Sixth International Joint Conference on Artificial Intelligence, 2017.
 
-\small
+\bibitem{cho-et-al}
+Cho, Kyunghyun, et al. “On the Properties of Neural Machine Translation: Encoder–Decoder Approaches.” Proceedings of SSST-8, Eighth Workshop on Syntax, Semantics and Structure in Statistical Translation, 2014.
 
-[1] Yao Qin, Dongjin Song, Haifeng Chen, Wei Cheng, Guofei Jiang, Garrison W.
-Cottrell. A Dual-Stage Attention-Based Recurrent Neural Network for Time Series
-Prediction. 2017.
+\bibliographystyle{plainnat}
+\end{thebibliography}
 
 \end{document}
