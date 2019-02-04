@@ -463,7 +463,7 @@ some small variations.
 
 \subsection{Ablation Study}
 
-\begin{figure}[h]
+\begin{figure}[ht]
   \centering
   \subfloat[SML 2010 test set]{{
     \includegraphics[width=0.4\linewidth]{ablation-sml.png}
@@ -508,65 +508,108 @@ without one of the attention mechanisms are not able to produce
 remarkable results due to both the large number of driving series and
 the strong variations of the series over the timesteps.
 
-\section{Multi-step-ahead encoder-decoder model}
+\section{Simple encoder network baseline}
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\linewidth]{ende-rnn.png} \\
-\caption{Encoder Decoder model}
+\includegraphics[width=0.9\linewidth]{ende-rnn-4.png} \\
+\caption{Encoder model}
 \label{fig:ende-rnn}
 \end{figure}
 
 
-In this paragraph we introduce a model for predicting more than a single value,
-say $k$ values, using the same inputs of the single-step-ahead model.
-In this scenario, the model can look the values of the driving series
-in the timesteps $[1, T - k + 1]$ and of the
-target series in the timesteps $[1, T - k]$ in order to predict the target
-series values in the timesteps $[T - k, T]$.
+In this paragraph we introduce a simple model we used as a baseline. 
+We initially developed a model composed of an encoder and a decoder with the goal 
+of producing a decoder network that could be easily extended to a multistep-ahead 
+environment where we could predict accurately the future values for more than a 
+single timestep.
+So for the encoder of the original model we stacked two LSTM layers and collected 
+the final output as the set of the two hidden states and cell states. These 
+vectors represent the driving series. For the decoder part we set as initial 
+state of the decoder LSTM the output of the encoder. 
+We notice that the number of layers in the decoder had to be
+the same as the encoder, as well as the dimension of the hidden sizes. 
+We then give as input to the decoder LSTM the vector containing the past history 
+of the target series and we feed this vector to the cell at each time-step. The 
+output hidden state of the decoder is fed to a dense layer to obtain the final 
+value for the desired timestep.
 
-For the architecture we took inspiration from the original authors' comparison
-of
-existing models and we extended the encoder-decoder model to predict the values
-of multiple timesteps ahead for the target series.
+Discouraged by the difficulties this network had in learning to predict values 
+for the NASDAQ 100 dataset (although the model still performed well on the 
+SML2010 dataset) we decided to make the network simpler focusing only on the 
+single step target series value forecasting. Given this choice we dropped 
+completely the decoder part replacing it with two feed-forward neural networks 
+one encoding the target series history, and one that takes the concatenation of 
+encoder hidden and cell state of the final LSTM iteration with the output of the 
+first dense layer and maps it to the predicted value of the target series.
 
-For the encoder of this model we stacked two LSTM layers and collected only the
-final output as the set of the two hidden states and cell states. These vectors
-represent the driving series.
-
-For the decoder part we set as initial state of the decoder LSTM the output of
-the
-encoder. We notice that the number of layers in the decoder is (and has to be)
-the
-same as the encoder, as well as the dimension of the hidden sizes. We then give
-as
-input to the decoder LSTM the vector containing the past history of the target
-series and we feed this vector to the cell at each time-step. The output hidden
-state of the decoder is fed to a dense layer to obtain the final value for the
-desired timestep. The number of timesteps for the decoder is determined at test
-time, that is we train the network to predict the value of the target series for
-the next $k$ timesteps, however at test time we can ask the model to predict
-the
-next $k'$ timesteps with possibly $k' \ne k$.
+For the encoder network we mostly left it unchanged, we 
+just reduced the number of LSTM layers from 2 to 1; the choice of keeping the 
+encoder makes sense since we still want to capture time dependencies in the 
+driving series and encode this information in a fixed size representation. On the 
+other hand the window of past values is considered altogether applying a dense 
+layer to the input vector.
 
 
 \subsection{Implementation details}
 
-For the encoder-decoder model we took advantage of the Keras. We instantiate a
-stacked
+For this simple encoder model we took advantage of the Keras. We instantiate a
 \texttt{LSTMCell} and gave it as argument to a \texttt{RNN} layer. Using the
 functional API we applied this layer to the driving series' input and collected
-the final state. The decoder is similar and we set it to return both states and
-sequences. We additionally set the initial state argument to the encoder output
-states. Finally we apply a \texttt{Dense} layer to the output with linear
-activation (since this is a regression problem).
+the final state. As in the original architecture the input to the LSTM at each 
+timestep is a vector if $n$ values of the $n$ driving series for that timestep.
+
+Finally we apply a \texttt{Dense} layer to the concatenation of the encoder 
+hidden and cell states and to the values of the past history for the target 
+series. The concatenation of the results is passed to two final \texttt{Dense} 
+layers up to the output with the predicted value.
 
 We finally defined a callback in the \texttt{fit()} function call to make the
 training stop if the value of the loss doesn't improve for a certain number of
 consecutive steps (the level of patience was empirically adjusted).
 
+We trained for a total of 100 epochs with an Adam optimizer without any learning 
+rate decay.
+
 \subsection{Results}
-TODO
+
+As you can see from the table of the values we got for the various metrics the 
+model doesn't perform as well as the dual-stage attention RNN described in the 
+previous sections. This validates the ideas by the original authors and finally 
+justifies the complexity of the network with an improvement in the 
+performance.
+
+
+\begin{center}
+\begin{table}
+\begin{tabular}{r|c|c|c|c|c|c|c|c|c|}
+\multicolumn{1}{r}{}
+  & \multicolumn{3}{c}{\textbf{Train}}
+  & \multicolumn{3}{c}{\textbf{Validation}}
+  & \multicolumn{3}{c}{\textbf{Test}} \\
+  \cline{2-10}
+  & \multicolumn{1}{c}{RMSE}
+  & \multicolumn{1}{c}{MAE}
+  & \multicolumn{1}{c|}{MAPE}
+  & \multicolumn{1}{c}{RMSE}
+  & \multicolumn{1}{c}{MAE}
+  & \multicolumn{1}{c|}{MAPE}
+  & \multicolumn{1}{c}{RMSE}
+  & \multicolumn{1}{c}{MAE}
+  & \multicolumn{1}{c|}{MAPE}\\
+\cline{2-10}
+NASDAQ100 & 4.5726 & 3.5723 & 0.0744 & 4.0200 & 3.1977 & 0.0658 & 4.0803 &
+3.1980 & 0.0647 \\
+\cline{2-10}
+SML2010 & 0.1049 & 0.0746 & 0.3858 & 0.1714 & 0.1714 & 0.5728 & 0.1026 & 0.0750
+& 0.3497 \\
+\cline{2-10}
+\end{tabular}
+\vspace{1em}
+\caption{Results over SML2010 and NASDAQ100}
+\label{results-encoder}
+\end{table}
+\end{center}
 
 \section{Conclusion}
 

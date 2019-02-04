@@ -1,4 +1,5 @@
 import math
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,11 +18,14 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     "config",
-    "conf/NASDAQ100_keras.json",
+    "conf/SML2010_keras.json",
     "Path to json file with the configuration to be run",
 )
 
 config = Config.from_file(FLAGS.config)
+
+if not os.path.exists(config.log_dir):
+    os.makedirs(config.log_dir)
 
 tf.set_random_seed(config.seed)
 np.random.seed(config.seed)
@@ -39,14 +43,13 @@ encoder_inputs = Input(shape=(None, config.n))  # add endogenous series
 encoder = RNN([LSTMCell(units) for units in layers], return_state=True)
 
 encoder_out_and_states = encoder(encoder_inputs)
-encoder_states = encoder_out_and_states[1:]
 
 # Decoder
 decoder_inputs = Input(shape=(config.T - num_steps_ahead,))
 
 z_i = Dense(64)(decoder_inputs)
 
-encoder_out = concatenate(encoder_states + [z_i])
+encoder_out = concatenate(encoder_out_and_states + [z_i])
 
 z = Dense(256)(encoder_out)
 decoder_outs = Dense(len(config.target_cols), activation="linear")(z)
@@ -75,7 +78,7 @@ target_y_t = np.copy(y_t[:, -num_steps_ahead:, :])
 X_t = X_t[:, :config.T - num_steps_ahead + 1, :]
 decoder_input = y_t.transpose((0, 2, 1))[:, :, :-num_steps_ahead]
 
-test_size = 2500
+test_size = 537
 train_target_y_t = target_y_t[:-test_size]
 train_X_t = X_t[:-test_size]
 train_decoder_input = np.tile(
@@ -88,17 +91,17 @@ test_decoder_input = np.tile(
     decoder_input[-test_size:], (1, num_steps_ahead, 1)
 )
 
-train_target_y_t = np.reshape(train_target_y_t, [train_target_y_t.shape[0],
-                                                 train_target_y_t.shape[1]])
+train_target_y_t_ = np.reshape(train_target_y_t, [train_target_y_t.shape[0],
+                                                  train_target_y_t.shape[1]])
 
 train_decoder_input = np.squeeze(train_decoder_input)
 test_decoder_input = np.squeeze(test_decoder_input)
 
-print(train_target_y_t.shape)
+print(train_target_y_t_.shape)
 
 model.fit(
     x=[train_X_t, train_decoder_input],
-    y=train_target_y_t,
+    y=train_target_y_t_,
     epochs=config.num_epochs,
     validation_split=0.1,
     batch_size=config.batch_size,
