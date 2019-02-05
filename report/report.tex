@@ -605,8 +605,6 @@ SML2010 & 0.1049 & 0.0746 & 0.3858 & 0.1714 & 0.1714 & 0.5728 & 0.1026 & 0.0750
 \end{center}
 
 
-
-
 \subsection{Results}
 
 As can be seen from Table \ref{results-encoder} the scores achieved in the various
@@ -619,10 +617,16 @@ performance.
 
 \section{Conclusion}
 
-In this paper we reimplemented the architecture described in [1] and showed
-the effectiveness of the attention mechanisms introduced.
-
-
+In this paper we analysed the work done in [1] reimplementing the dual-stage 
+attention mechanism building a model that is able to select both relevant driving 
+series and relevant timesteps from the past time window. Our implementation uses 
+modern APIs at both high (Keras functional API) and low level (Tensorflow) and we 
+put much effort in writing a modular and readable code that makes as easy as 
+possible to reproduce the results we presented in this work. We also reported a 
+large number of experiments to validate the performances described in [1] 
+including the development of a novel baseline model based on a simple encoder and 
+a set of feed-forward networks in output, and a complete ablation study of the 
+original attention based model.
 
 \newpage
 \section*{References}
