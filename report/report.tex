@@ -97,8 +97,9 @@ improvements with respect to previous methods. Simple RNN architectures though
 suffer from vanishing/exploding gradient problems and cannot discriminate
 exogenous series in case these are given as input. In this work we analyse a
 solution based on LSTM networks and a multiple attentions mechanism and compare
-this to simpler models including a multistep-ahead encoder-decoder architecture
+this to simpler models including a encoder architecture
 to show the effectiveness of the method proposed by [1].
+
 
 \end{abstract}
 
@@ -553,11 +554,12 @@ layer to the input vector.
 
 \subsection{Implementation details}
 
-For this simple encoder model we took advantage of the Keras. We instantiate a
-\texttt{LSTMCell} and gave it as argument to a \texttt{RNN} layer. Using the
-functional API we applied this layer to the driving series' input and collected
-the final state. As in the original architecture the input to the LSTM at each 
-timestep is a vector if $n$ values of the $n$ driving series for that timestep.
+For this simple encoder model we took advantage of the Keras interface.
+We instantiate a \texttt{LSTMCell} and gave it as argument to a \texttt{RNN}
+layer. Using the functional API we applied this layer to the driving series'
+input and collected the final state. As in the original architecture the input
+to the LSTM at each timestep is a vector of $n$ values of the $n$ driving
+series for that timestep.
 
 Finally we apply a \texttt{Dense} layer to the concatenation of the encoder 
 hidden and cell states and to the values of the past history for the target 
@@ -571,17 +573,8 @@ consecutive steps (the level of patience was empirically adjusted).
 We trained for a total of 100 epochs with an Adam optimizer without any learning 
 rate decay.
 
-\subsection{Results}
-
-As you can see from the table of the values we got for the various metrics the 
-model doesn't perform as well as the dual-stage attention RNN described in the 
-previous sections. This validates the ideas by the original authors and finally 
-justifies the complexity of the network with an improvement in the 
-performance.
-
-
 \begin{center}
-\begin{table}
+\begin{table}[h]
 \begin{tabular}{r|c|c|c|c|c|c|c|c|c|}
 \multicolumn{1}{r}{}
   & \multicolumn{3}{c}{\textbf{Train}}
@@ -611,9 +604,25 @@ SML2010 & 0.1049 & 0.0746 & 0.3858 & 0.1714 & 0.1714 & 0.5728 & 0.1026 & 0.0750
 \end{table}
 \end{center}
 
+
+
+
+\subsection{Results}
+
+As can be seen from Table \ref{results-encoder} the scores achieved in the various
+metrics are not as good as the ones of the dual-stage attention RNN described
+in the previous sections. This validates the ideas by the original authors and
+finally justifies the complexity of the network with an improvement in the 
+performance.
+
+
+
 \section{Conclusion}
 
-TODO
+In this paper we reimplemented the architecture described in [1] and showed
+the effectiveness of the attention mechanisms introduced.
+
+
 
 \newpage
 \section*{References}
