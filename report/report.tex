@@ -96,9 +96,9 @@ features have been applied to time series forecasting showing important
 improvements with respect to previous methods. Simple RNN architectures though
 suffer from vanishing/exploding gradient problems and cannot discriminate
 exogenous series in case these are given as input. In this work we analyse a
-solution based on LSTM networks and a multiple attentions mechanism and compare
-this to simpler models including a encoder architecture
-to show the effectiveness of the method proposed by [1].
+solution based on LSTM networks and multiple attention mechanisms, which was
+originally proposed by [1], and compare it to simpler models including an
+encoder architecture to show the effectiveness of the method proposed.
 
 
 \end{abstract}
@@ -358,7 +358,7 @@ training ran for longer or later incurred in overfitting.
     \includegraphics[width=0.6\linewidth]{hype-nasdaq.png}
   }}
   \caption{RMSE score across the dataset for different
-   window lengths $T$ and encoder/decoder hidden state size,
+   window lengths $T$ and encoder/decoder hidden state sizes,
    $m$ and $p$ respectively}
   \label{fig:hype}
 \end{figure}
@@ -509,69 +509,79 @@ without one of the attention mechanisms are not able to produce
 remarkable results due to both the large number of driving series and
 the strong variations of the series over the timesteps.
 
-\section{Simple encoder network baseline}
-
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.9\linewidth]{ende-rnn-4.png} \\
+\includegraphics[width=0.8\linewidth]{ende-rnn-4.png} \\
 \caption{Encoder model}
 \label{fig:ende-rnn}
 \end{figure}
 
+\section{Simple encoder network baseline}
 
-In this paragraph we introduce a simple model we used as a baseline. 
+In this paragraph we introduce a simple model we used as a baseline.
+
 We initially developed a model composed of an encoder and a decoder with the goal 
-of producing a decoder network that could be easily extended to a multistep-ahead 
+of producing a network that could be easily extended to a multistep-ahead 
 environment where we could predict accurately the future values for more than a 
-single timestep.
-So for the encoder of the original model we stacked two LSTM layers and collected 
-the final output as the set of the two hidden states and cell states. These 
-vectors represent the driving series. For the decoder part we set as initial 
-state of the decoder LSTM the output of the encoder. 
-We notice that the number of layers in the decoder had to be
-the same as the encoder, as well as the dimension of the hidden sizes. 
-We then give as input to the decoder LSTM the vector containing the past history 
-of the target series and we feed this vector to the cell at each time-step. The 
-output hidden state of the decoder is fed to a dense layer to obtain the final 
-value for the desired timestep.
+single timestep. The encoder of this original network was composed of two
+stacked LSTM layers, taking as input the driving series' sequence, and we
+collected the final hidden state and cell state of each layer that were used
+as the initial states for the decoder. The number of layers of the decoder had
+to be the same as the encoder, as well as the dimension of the hidden state,
+to directly use the encoder states. We then gave as input to the decoder LSTM
+the vector containing the past history of the target series; for multi-step ahead
+forecasting the vector was simply fed a number of time equal to the number
+of steps to predict. The hidden states of the decoder were finally fed to a
+dense layer to obtain the final predictions.
 
 Discouraged by the difficulties this network had in learning to predict values 
 for the NASDAQ 100 dataset (although the model still performed well on the 
-SML2010 dataset) we decided to make the network simpler focusing only on the 
+SML 2010 dataset) we decided to make the network simpler focusing only on the 
 single step target series value forecasting. Given this choice we dropped 
-completely the decoder part replacing it with two feed-forward neural networks 
-one encoding the target series history, and one that takes the concatenation of 
-encoder hidden and cell state of the final LSTM iteration with the output of the 
-first dense layer and maps it to the predicted value of the target series.
+completely the decoder part replacing it with two feed-forward neural networks.
+The first one is composed of one dense layer and it is used to encode the
+target series history. The other one takes the concatenation of the encoder
+output and the cell state of the final LSTM iteration with the output of 
+the other network and maps it to the predicted value of the target series.
 
-For the encoder network we mostly left it unchanged, we 
-just reduced the number of LSTM layers from 2 to 1; the choice of keeping the 
+The encoder network was mostly left unchanged but we reduced the number
+of LSTM layers from 2 to 1; the choice of keeping the 
 encoder makes sense since we still want to capture time dependencies in the 
 driving series and encode this information in a fixed size representation. On the 
 other hand the window of past values is considered altogether applying a dense 
-layer to the input vector.
+layer to the input vector. The complete architecture is shown in Figure
+\ref{fig:ende-rnn}.
 
 
 \subsection{Implementation details}
 
-For this simple encoder model we took advantage of the Keras interface.
-We instantiate a \texttt{LSTMCell} and gave it as argument to a \texttt{RNN}
+For this simple encoder model we took advantage of Keras interface.
+We instantiated a \texttt{LSTMCell} and gave it as argument to a \texttt{RNN}
 layer. Using the functional API we applied this layer to the driving series'
-input and collected the final state. As in the original architecture the input
-to the LSTM at each timestep is a vector of $n$ values of the $n$ driving
-series for that timestep.
+input and collected the final state. We set the size of the output equal to
+$128$. As in the original architecture the input to the LSTM at each timestep
+is a vector of $n$ values of the $n$ driving series values in that timestep.
 
-Finally we apply a \texttt{Dense} layer to the concatenation of the encoder 
-hidden and cell states and to the values of the past history for the target 
-series. The concatenation of the results is passed to two final \texttt{Dense} 
-layers up to the output with the predicted value.
+The encoder last hidden and cell states were concatenated to the values of
+the past history of the target series, after being fed to the dense layer
+with output size $64$. The concatenation is passed to two final \texttt{Dense}
+layers, of output size respectively $256$ and $1$, with the last one being 
+the predicted value.
 
-We finally defined a callback in the \texttt{fit()} function call to make the
+We defined a callback in the \texttt{fit()} function call to make the
 training stop if the value of the loss doesn't improve for a certain number of
 consecutive steps (the level of patience was empirically adjusted).
 
 We trained for a total of 100 epochs with an Adam optimizer without any learning 
-rate decay.
+rate decay, with input window size $T=10$.
+
+\subsection{Results}
+
+As can be seen from Table \ref{results-encoder} the scores achieved in the various
+metrics are not as good as the ones of the dual-stage attention RNN described
+in the previous sections. This validates the ideas by the original authors and
+finally justifies the complexity of the network with an improvement in the 
+performance.
 
 \begin{center}
 \begin{table}[h]
@@ -605,28 +615,18 @@ SML2010 & 0.1049 & 0.0746 & 0.3858 & 0.1714 & 0.1714 & 0.5728 & 0.1026 & 0.0750
 \end{center}
 
 
-\subsection{Results}
-
-As can be seen from Table \ref{results-encoder} the scores achieved in the various
-metrics are not as good as the ones of the dual-stage attention RNN described
-in the previous sections. This validates the ideas by the original authors and
-finally justifies the complexity of the network with an improvement in the 
-performance.
-
-
-
 \section{Conclusion}
 
-In this paper we analysed the work done in [1] reimplementing the dual-stage 
+In this paper we analysed the work done in [1], re-implementing the dual-stage 
 attention mechanism building a model that is able to select both relevant driving 
-series and relevant timesteps from the past time window. Our implementation uses 
-modern APIs at both high (Keras functional API) and low level (Tensorflow) and we 
+series and relevant timesteps from the past time window. We reported a 
+large number of experiments to validate the performances described in [1], 
+including a complete ablation study of the original attention based model
+and the development of a novel baseline model based on a simple encoder and 
+a set of feed-forward networks. Our implementations use
+modern APIs at both low level (Tensorflow) and high (Keras functional API) and we 
 put much effort in writing a modular and readable code that makes as easy as 
-possible to reproduce the results we presented in this work. We also reported a 
-large number of experiments to validate the performances described in [1] 
-including the development of a novel baseline model based on a simple encoder and 
-a set of feed-forward networks in output, and a complete ablation study of the 
-original attention based model.
+possible to reproduce the results we presented in this work.
 
 \newpage
 \section*{References}
