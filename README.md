@@ -5,6 +5,7 @@ https://arxiv.org/abs/1704.02971.
 Some parameters' names, variables and configurations keys are
 derived from the paper.
 
+### [Slides introducing the work](https://docs.google.com/presentation/d/1GR1pwjtAciHgfgHgF9vj2D-1TbHbkko_8OvTrqWxKGA/edit?usp=sharing)
 
 ## Reproducing the results
 
