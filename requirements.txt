@@ -1,8 +1,8 @@
 scikit-learn
 keras
 matplotlib==3.0.2
-numpy==1.15.4
-tensorflow>=1.12.1
+numpy
+tensorflow>=1.12.1,<2.0.0
 dataclasses==0.6
 dataclasses-json==0.2.1
 cached-property==1.5.1
